@@ -1,0 +1,16 @@
+node_modules
+dist
+dist.zip
+.vite
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.cursor/
+.vscode/
+.idea/
+*.swp
+Thumbs.db

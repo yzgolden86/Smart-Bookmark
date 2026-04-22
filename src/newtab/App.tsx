@@ -1,0 +1,178 @@
+import { useEffect, useMemo, useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Bookmark,
+  Sparkles,
+  Wand2,
+  Settings2,
+  Columns,
+  HardDriveDownload,
+} from "lucide-react";
+import Dashboard from "./pages/Dashboard";
+import Cleaner from "./pages/Cleaner";
+import AiPanel from "./pages/AiPanel";
+import SettingsPage from "./pages/Settings";
+import Compare from "./pages/Compare";
+import BackupPage from "./pages/Backup";
+import QrDialog from "./pages/QrDialog";
+import { getSettings, onSettingsChange } from "@/lib/storage";
+import type { Settings } from "@/types";
+import { useT } from "@/lib/i18n";
+import { ToastHost } from "@/components/ui/toast";
+import ThemeToggle from "@/components/ThemeToggle";
+
+type TabId = "dashboard" | "cleaner" | "ai" | "compare" | "backup" | "settings";
+
+function readHashTab(): TabId {
+  const h = window.location.hash.slice(1);
+  const params = new URLSearchParams(h);
+  const t = params.get("tab");
+  if (
+    t === "cleaner" ||
+    t === "ai" ||
+    t === "settings" ||
+    t === "compare" ||
+    t === "backup"
+  )
+    return t;
+  return "dashboard";
+}
+
+function readHashParam(key: string): string {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  return params.get(key) ?? "";
+}
+
+export default function App() {
+  const t = useT();
+  const [tab, setTab] = useState<TabId>(readHashTab);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [initialQuery] = useState(() => readHashParam("q"));
+  const [qr, setQr] = useState<string>(() => readHashParam("qr"));
+
+  useEffect(() => {
+    getSettings().then(setSettings);
+    const off = onSettingsChange(setSettings);
+    const onHash = () => {
+      setTab(readHashTab());
+      setQr(readHashParam("qr"));
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      off();
+      window.removeEventListener("hashchange", onHash);
+    };
+  }, []);
+
+  const bg = useMemo(() => {
+    if (!settings?.wallpaper) return undefined;
+    return { backgroundImage: `url(${settings.wallpaper})` };
+  }, [settings?.wallpaper]);
+
+  if (!settings) return null;
+
+  return (
+    <div className="min-h-screen bg-cover bg-center bg-fixed" style={bg}>
+      <div className="min-h-screen bg-background/85 backdrop-blur-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-indigo-500/8 via-fuchsia-500/5 to-transparent" />
+        <header className="sticky top-0 z-20 border-b bg-background/75 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-3">
+            <div className="flex items-center gap-2 font-semibold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-md shadow-indigo-500/20">
+                <Bookmark className="h-4 w-4" />
+              </div>
+              <span className="tracking-tight">{t("app.title")}</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                v0.2
+              </span>
+            </div>
+            <div className="flex-1" />
+            <ThemeToggle />
+            <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
+              <TabsList>
+                <TabsTrigger value="dashboard" className="gap-2">
+                  <Bookmark className="h-4 w-4" /> {t("tabs.dashboard")}
+                </TabsTrigger>
+                <TabsTrigger value="cleaner" className="gap-2">
+                  <Wand2 className="h-4 w-4" /> {t("tabs.cleaner")}
+                </TabsTrigger>
+                <TabsTrigger value="compare" className="gap-2">
+                  <Columns className="h-4 w-4" /> {t("tabs.compare")}
+                </TabsTrigger>
+                <TabsTrigger value="ai" className="gap-2">
+                  <Sparkles className="h-4 w-4" /> {t("tabs.ai")}
+                </TabsTrigger>
+                <TabsTrigger value="backup" className="gap-2">
+                  <HardDriveDownload className="h-4 w-4" /> {t("tabs.backup")}
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-2">
+                  <Settings2 className="h-4 w-4" /> {t("tabs.settings")}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-7xl px-6 py-6">
+          {tab === "dashboard" && (
+            <Dashboard settings={settings} initialQuery={initialQuery} />
+          )}
+          {tab === "cleaner" && <Cleaner />}
+          {tab === "compare" && <Compare settings={settings} />}
+          {tab === "ai" && <AiPanel settings={settings} />}
+          {tab === "backup" && <BackupPage />}
+          {tab === "settings" && <SettingsPage />}
+        </main>
+
+        <YearProgress />
+        <footer className="py-4 text-center text-xs text-muted-foreground">
+          Smart Bookmark · {t("app.tagline")}
+        </footer>
+      </div>
+
+      {qr && (
+        <QrDialog
+          url={qr}
+          onClose={() => {
+            setQr("");
+            const params = new URLSearchParams(window.location.hash.slice(1));
+            params.delete("qr");
+            const s = params.toString();
+            window.history.replaceState(null, "", s ? "#" + s : "#");
+          }}
+        />
+      )}
+
+      <ToastHost />
+    </div>
+  );
+}
+
+function YearProgress() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const start = new Date(year, 0, 1).getTime();
+  const end = new Date(year + 1, 0, 1).getTime();
+  const pct = ((now.getTime() - start) / (end - start)) * 100;
+  const cells = 20;
+  const done = Math.round((pct / 100) * cells);
+  return (
+    <div className="mx-auto flex max-w-md items-center justify-center gap-2 py-4 text-[11px] text-muted-foreground">
+      <span>{year} 年过去</span>
+      <div className="flex gap-1">
+        {Array.from({ length: cells }).map((_, i) => (
+          <span
+            key={i}
+            className={
+              "h-2 w-2 rounded-sm " +
+              (i < done
+                ? "bg-gradient-to-br from-indigo-500 to-fuchsia-500"
+                : "bg-muted")
+            }
+          />
+        ))}
+      </div>
+      <span>{pct.toFixed(1)}%</span>
+    </div>
+  );
+}
