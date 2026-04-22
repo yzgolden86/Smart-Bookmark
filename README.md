@@ -129,6 +129,11 @@ smart-bookmark/
 - AI API Key 仅保存在 `chrome.storage.local`
 - 失效链接检测会向对应域名发起 HEAD/GET 请求，可在扫描时选择关闭
 - 悬浮球只在你开启时才会注入；注入时不发任何请求，搜索走本地书签
+- 完整隐私政策：[PRIVACY.md](./PRIVACY.md) · [在线版](https://xiaoniuge36.github.io/Smart-Bookmark/privacy.html)
+
+## 🏪 商店上架
+
+商店上架文案与权限说明见 [`STORE_LISTING.md`](./STORE_LISTING.md)。
 
 ## 📄 License
 
