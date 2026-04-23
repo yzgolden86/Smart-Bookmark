@@ -92,12 +92,13 @@ export default function RepoCard({ repo, compact, bookmarkFolderId }: Props) {
           loading="lazy"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-1.5 truncate text-[15px] font-semibold tracking-tight">
-            <span className="truncate text-muted-foreground">
-              {repo.owner}
-            </span>
-            <span className="text-muted-foreground/60">/</span>
-            <span className="truncate text-primary">{repo.name}</span>
+          <div
+            className="truncate text-[15px] font-semibold tracking-tight"
+            title={repo.fullName}
+          >
+            <span className="text-muted-foreground">{repo.owner}</span>
+            <span className="mx-1 text-muted-foreground/60">/</span>
+            <span className="text-primary">{repo.name}</span>
           </div>
           {repo.description && !compact && (
             <div
@@ -107,34 +108,33 @@ export default function RepoCard({ repo, compact, bookmarkFolderId }: Props) {
             </div>
           )}
         </div>
-        <div className="flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={onAdd}
-              title={t("discover.addBookmark")}
-              aria-label={t("discover.addBookmark")}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent hover:text-foreground"
-            >
-              <Bookmark className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={onCopy}
-              title={t("discover.copy")}
-              aria-label={t("discover.copy")}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent hover:text-foreground"
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </button>
-            <span
-              title={t("discover.open")}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </span>
-          </div>
-        </div>
+      </div>
+
+      <div className="pointer-events-none absolute right-2 top-2 flex items-center gap-0.5 rounded-md bg-card/80 opacity-0 shadow-sm ring-1 ring-border/50 backdrop-blur transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+        <button
+          type="button"
+          onClick={onAdd}
+          title={t("discover.addBookmark")}
+          aria-label={t("discover.addBookmark")}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent hover:text-foreground"
+        >
+          <Bookmark className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onCopy}
+          title={t("discover.copy")}
+          aria-label={t("discover.copy")}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent hover:text-foreground"
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </button>
+        <span
+          title={t("discover.open")}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </span>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground">

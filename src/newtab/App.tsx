@@ -99,7 +99,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-indigo-500/8 via-fuchsia-500/5 to-transparent" />
         <header className="sticky top-0 z-20 border-b bg-background/75 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-3">
-            <div className="flex items-center gap-2 font-semibold">
+            <div className="flex shrink-0 items-center gap-2 whitespace-nowrap font-semibold">
               <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-md shadow-indigo-500/20">
                 <Bookmark className="h-4 w-4" />
               </div>
@@ -108,7 +108,7 @@ export default function App() {
                 v0.2
               </span>
             </div>
-            <div className="flex-1" />
+            <div className="min-w-0 flex-1" />
             <ThemeToggle />
             <Tabs value={tab} onValueChange={(v) => setTabWithHash(v as TabId)}>
               <TabsList className="h-9 gap-0.5 bg-transparent p-0">

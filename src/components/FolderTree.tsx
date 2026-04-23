@@ -1,7 +1,102 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { BookmarkNode } from "@/types";
 import { cn } from "@/lib/utils";
-import { ChevronRight, Folder, FolderOpen, Pin, PinOff } from "lucide-react";
+import { ChevronRight, Pin, PinOff } from "lucide-react";
+
+/**
+ * 扁平 3D 风格的彩色文件夹图标。统一品牌色（indigo/violet），与整体设计系统一致。
+ * - open=false: 闭合，有背板 tab 与前片高光
+ * - open=true:  打开，露出一张纸，前片向前倾
+ * - variant="all": 用品牌主色（更深的 fuchsia/indigo 混色）表示「全部书签」
+ */
+function FolderIcon({
+  open,
+  variant = "default",
+  className,
+}: {
+  open?: boolean;
+  variant?: "default" | "all";
+  className?: string;
+}) {
+  const uid = useId().replace(/[:]/g, "");
+  const backTop = variant === "all" ? "#a78bfa" : "#818cf8";
+  const backBot = variant === "all" ? "#7c3aed" : "#6366f1";
+  const frontTop = variant === "all" ? "#ddd6fe" : "#c7d2fe";
+  const frontBot = variant === "all" ? "#a78bfa" : "#a5b4fc";
+
+  if (open) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id={`fb-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={backTop} />
+            <stop offset="1" stopColor={backBot} />
+          </linearGradient>
+          <linearGradient id={`ff-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={frontTop} />
+            <stop offset="1" stopColor={frontBot} />
+          </linearGradient>
+        </defs>
+        <path
+          d="M3 6.5A2 2 0 0 1 5 4.5h3.6a2 2 0 0 1 1.4.6l1.4 1.4H19a2 2 0 0 1 2 2V11H3V6.5Z"
+          fill={`url(#fb-${uid})`}
+        />
+        <rect
+          x="5.5"
+          y="9"
+          width="14"
+          height="1.6"
+          rx="0.6"
+          fill="#ffffff"
+          fillOpacity="0.75"
+        />
+        <path
+          d="M2.6 11h18.8l-1.35 7.3A2.2 2.2 0 0 1 17.89 20H6.11a2.2 2.2 0 0 1-2.16-1.7L2.6 11Z"
+          fill={`url(#ff-${uid})`}
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={`fb-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={backTop} />
+          <stop offset="1" stopColor={backBot} />
+        </linearGradient>
+        <linearGradient id={`ff-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={frontTop} />
+          <stop offset="1" stopColor={frontBot} />
+        </linearGradient>
+      </defs>
+      <path
+        d="M3 6.5A2 2 0 0 1 5 4.5h3.6a2 2 0 0 1 1.4.6l1.4 1.4H19a2 2 0 0 1 2 2V10H3V6.5Z"
+        fill={`url(#fb-${uid})`}
+      />
+      <path
+        d="M3 8.5h18V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8.5Z"
+        fill={`url(#ff-${uid})`}
+      />
+      <path
+        d="M3 8.5h18"
+        stroke="#ffffff"
+        strokeOpacity="0.45"
+        strokeWidth="0.6"
+      />
+    </svg>
+  );
+}
 
 export interface FolderTreeProps {
   tree: BookmarkNode[];
@@ -46,14 +141,13 @@ export default function FolderTree(props: FolderTreeProps) {
             : "text-foreground/85",
         )}
       >
-        <span
+        <FolderIcon
+          variant="all"
           className={cn(
-            "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] bg-gradient-to-br from-indigo-400/20 to-fuchsia-400/20 text-primary shadow-sm ring-1 ring-inset ring-primary/20 transition-colors",
-            !selectedId && "from-primary/25 to-fuchsia-500/25 ring-primary/40",
+            "h-[18px] w-[18px] shrink-0 drop-shadow-sm transition-transform",
+            !selectedId ? "scale-105" : "opacity-90",
           )}
-        >
-          <Folder className="h-3 w-3" strokeWidth={2.2} />
-        </span>
+        />
         <span className="flex-1 truncate">全部书签</span>
       </button>
 
@@ -92,22 +186,14 @@ export default function FolderTree(props: FolderTreeProps) {
               className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left"
               title={f.title}
             >
-              <span
+              <FolderIcon
+                open={isExpanded}
+                variant={isSelected ? "all" : "default"}
                 className={cn(
-                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] shadow-sm ring-1 ring-inset transition-colors",
-                  isSelected
-                    ? "bg-gradient-to-br from-primary/30 to-fuchsia-500/25 text-primary ring-primary/40"
-                    : isExpanded
-                      ? "bg-gradient-to-br from-amber-200/60 to-amber-300/40 text-amber-700 ring-amber-400/30 dark:from-amber-800/40 dark:to-amber-700/30 dark:text-amber-200 dark:ring-amber-600/30"
-                      : "bg-gradient-to-br from-amber-100/70 to-amber-200/50 text-amber-700 ring-amber-300/30 dark:from-amber-900/30 dark:to-amber-800/25 dark:text-amber-300 dark:ring-amber-700/30",
+                  "h-[18px] w-[18px] shrink-0 drop-shadow-sm transition-transform",
+                  isSelected ? "scale-105" : "opacity-95 group-hover:opacity-100",
                 )}
-              >
-                {isExpanded ? (
-                  <FolderOpen className="h-3 w-3" strokeWidth={2.2} />
-                ) : (
-                  <Folder className="h-3 w-3" strokeWidth={2.2} />
-                )}
-              </span>
+              />
               <span
                 className={cn("flex-1 truncate", isSelected && "font-medium")}
               >
