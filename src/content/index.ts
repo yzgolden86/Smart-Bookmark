@@ -11,24 +11,32 @@ interface MiniSettings {
 
 const STRINGS = {
   zh: {
-    search: "搜索书签",
+    placeholder: "搜索书签或命令…",
+    sectionBookmarks: "书签",
+    sectionActions: "命令",
+    emptyBookmarks: "无匹配书签",
     sidepanel: "打开侧边栏",
-    cleaner: "清理中心",
+    cleaner: "打开清理中心",
     copy: "复制当前 URL",
     qr: "生成二维码",
     hide: "隐藏悬浮球",
     copied: "已复制",
-    placeholder: "搜索书签或本页…按回车打开",
+    kbdOpen: "打开",
+    kbdNav: "移动",
   },
   en: {
-    search: "Search bookmarks",
+    placeholder: "Search bookmarks or actions…",
+    sectionBookmarks: "Bookmarks",
+    sectionActions: "Actions",
+    emptyBookmarks: "No matches",
     sidepanel: "Open side panel",
-    cleaner: "Cleaner",
+    cleaner: "Open cleaner",
     copy: "Copy current URL",
     qr: "Generate QR code",
     hide: "Hide floating ball",
     copied: "Copied",
-    placeholder: "Search bookmarks or press Enter to search the web…",
+    kbdOpen: "Open",
+    kbdNav: "Navigate",
   },
 };
 
@@ -37,6 +45,17 @@ function pickLang(l?: string): "zh" | "en" {
   const nav = (navigator.language || "en").toLowerCase();
   return nav.startsWith("zh") ? "zh" : "en";
 }
+
+// 轻量图标集：feather 风格，16px stroke 2
+const ICON = {
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`,
+  panel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>`,
+  sparkles: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4M7 5h4M17 11v4M15 13h4"/><path d="M12 7l1.8 4.2L18 13l-4.2 1.8L12 19l-1.8-4.2L6 13l4.2-1.8z"/></svg>`,
+  copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>`,
+  qr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 14v3M14 21h3M21 21h.01"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+  bookmark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+};
 
 let host: HTMLDivElement | null = null;
 let root: ShadowRoot | null = null;
@@ -65,69 +84,142 @@ function injectStyles(r: ShadowRoot) {
   style.textContent = `
   :host { all: initial; }
   .wrap { pointer-events: auto; position: fixed; }
+
   .ball {
     width: 44px; height: 44px; border-radius: 22px;
-    background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+    background: linear-gradient(135deg,#5e6ad2,#7c3aed);
     color: #fff;
-    display:flex; align-items:center; justify-content:center;
-    cursor:grab; user-select:none;
-    box-shadow: 0 6px 18px rgba(0,0,0,.25);
-    font-family: system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size: 20px; font-weight: 700; letter-spacing:-.02em;
-    transition: transform .15s ease;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab; user-select: none;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.08),
+      0 10px 30px rgba(94,106,210,.35);
+    font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 18px; font-weight: 700; letter-spacing: -.02em;
+    transition: transform .15s ease, box-shadow .15s ease;
   }
-  .ball:hover { transform: scale(1.05); }
-  .ball:active { cursor: grabbing; }
+  .ball:hover {
+    transform: scale(1.06);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.14),
+      0 14px 36px rgba(94,106,210,.45);
+  }
+  .ball:active { cursor: grabbing; transform: scale(.97); }
+
   .panel {
     position: fixed;
-    min-width: 300px; max-width: 360px;
-    background: #ffffff; color: #111;
-    border-radius: 14px;
-    box-shadow: 0 20px 40px rgba(0,0,0,.2);
-    border: 1px solid rgba(0,0,0,.08);
+    min-width: 440px; max-width: 520px;
+    background: rgba(13,13,14,.96);
+    color: #f4f4f5;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.02),
+      0 24px 60px rgba(0,0,0,.5);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
     overflow: hidden;
-    font-family: system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
     font-size: 13px;
+    letter-spacing: -0.005em;
   }
-  @media (prefers-color-scheme: dark) {
-    .panel { background: #0b1220; color: #eef2ff; border-color: rgba(255,255,255,.08); }
-    .btn:hover { background: rgba(255,255,255,.06); }
-    .input { background: #111827; color: #eef2ff; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .hit { border-bottom: 1px solid rgba(255,255,255,.06); }
-    .muted { color: #9ca3af; }
+
+  .search {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
   }
+  .search .icon { flex: 0 0 auto; width: 16px; height: 16px; color: #a1a1aa; display: inline-flex; }
+  .search .icon svg { width: 100%; height: 100%; }
   .input {
-    width: 100%; box-sizing: border-box;
-    padding: 10px 12px; border: none; outline: none;
-    background: #f9fafb; color: #111;
-    border-bottom: 1px solid rgba(0,0,0,.06);
+    flex: 1 1 auto; min-width: 0;
+    background: transparent; border: 0; outline: 0;
+    color: #f4f4f5; font-size: 14px;
+    font-family: inherit; letter-spacing: inherit;
+    padding: 2px 0;
+  }
+  .input::placeholder { color: #71717a; }
+
+  .body {
+    max-height: 380px; overflow-y: auto;
+    padding: 4px 0 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.08) transparent;
+  }
+  .body::-webkit-scrollbar { width: 8px; }
+  .body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 8px; }
+
+  .section-title {
+    padding: 10px 14px 6px;
+    font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: #71717a;
+  }
+
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px;
+    margin: 0 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #e4e4e7;
+  }
+  .row .icon {
+    flex: 0 0 auto; width: 16px; height: 16px;
+    color: #a1a1aa; display: inline-flex;
+  }
+  .row .icon img { width: 100%; height: 100%; border-radius: 3px; }
+  .row .icon svg { width: 100%; height: 100%; }
+  .row .label {
+    flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     font-size: 13px;
   }
-  .rows { max-height: 260px; overflow-y: auto; }
-  .hit {
-    display:flex; gap:8px; padding: 8px 12px; cursor:pointer;
-    border-bottom: 1px solid rgba(0,0,0,.04);
-    align-items: center;
+  .row .meta {
+    flex: 0 0 auto;
+    font-size: 11px; color: #71717a;
+    max-width: 180px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .hit:hover { background: rgba(0,0,0,.05); }
-  .hit img { width:16px; height:16px; border-radius:3px; flex: 0 0 auto; }
-  .hit .t { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .hit .u { font-size: 11px; color:#6b7280; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; }
-  .muted { color:#6b7280; padding: 10px 12px; font-size:12px; }
-  .btns { display:flex; flex-wrap:wrap; gap: 4px; padding: 8px; border-top: 1px solid rgba(0,0,0,.06); }
-  .btn {
-    flex: 1 0 calc(50% - 4px);
-    padding: 6px 8px; border-radius: 8px;
-    background: transparent; cursor:pointer; color: inherit;
-    border: 0; text-align:left;
-    font-size: 12px;
+  .row.is-active {
+    background: rgba(255,255,255,.06);
+    color: #fafafa;
   }
-  .btn:hover { background: rgba(0,0,0,.06); }
+  .row.is-active .icon,
+  .row.is-active .meta { color: #d4d4d8; }
+
+  .empty {
+    padding: 14px 16px;
+    font-size: 12px; color: #71717a;
+    text-align: center;
+  }
+
+  .footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-size: 11px; color: #71717a;
+  }
+  .footer .group { display: inline-flex; align-items: center; gap: 6px; }
+  .kbd {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    font-size: 10.5px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 4px;
+    color: #d4d4d8;
+  }
+
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: rgba(15,23,42,.9); color:#fff;
+    background: rgba(13,13,14,.92); color: #fafafa;
     padding: 8px 14px; border-radius: 999px; font-size: 12px;
     pointer-events: none;
+    border: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
   }
   `;
   r.appendChild(style);
@@ -177,6 +269,23 @@ let panelEl: HTMLDivElement | null = null;
 let wrapEl: HTMLDivElement | null = null;
 let mounted = false;
 
+type ItemKind = "bookmark" | "action";
+interface FlatItem {
+  kind: ItemKind;
+  label: string;
+  meta?: string;
+  iconSvg?: string;
+  iconImg?: string;
+  onRun: () => void | Promise<void>;
+}
+
+function svgSpan(svg: string): HTMLSpanElement {
+  const span = document.createElement("span");
+  span.className = "icon";
+  span.innerHTML = svg;
+  return span;
+}
+
 async function mount() {
   if (mounted) return;
   ensureHost();
@@ -200,137 +309,41 @@ async function mount() {
   panel.className = "panel";
   panel.style.display = "none";
 
+  const searchBar = document.createElement("div");
+  searchBar.className = "search";
+  searchBar.appendChild(svgSpan(ICON.search));
   const input = document.createElement("input");
   input.className = "input";
   input.placeholder = S.placeholder;
-  panel.appendChild(input);
+  searchBar.appendChild(input);
+  panel.appendChild(searchBar);
 
-  const rows = document.createElement("div");
-  rows.className = "rows";
-  panel.appendChild(rows);
+  const body = document.createElement("div");
+  body.className = "body";
+  panel.appendChild(body);
 
-  const btns = document.createElement("div");
-  btns.className = "btns";
-  const mkBtn = (label: string, handler: () => void) => {
-    const b = document.createElement("button");
-    b.className = "btn";
-    b.textContent = label;
-    b.addEventListener("click", handler);
-    return b;
-  };
+  const footer = document.createElement("div");
+  footer.className = "footer";
+  const footerLeft = document.createElement("div");
+  footerLeft.className = "group";
+  footerLeft.innerHTML = `<span class="kbd">↵</span>&nbsp;${S.kbdOpen}`;
+  const footerRight = document.createElement("div");
+  footerRight.className = "group";
+  footerRight.innerHTML = `<span class="kbd">↑</span><span class="kbd">↓</span>&nbsp;${S.kbdNav}`;
+  footer.appendChild(footerLeft);
+  footer.appendChild(footerRight);
+  panel.appendChild(footer);
 
-  btns.appendChild(
-    mkBtn(S.sidepanel, () => {
-      chrome.runtime.sendMessage({ type: "open-sidepanel" });
-      togglePanel(false);
-    }),
-  );
-  btns.appendChild(
-    mkBtn(S.cleaner, () => {
-      chrome.runtime.sendMessage({ type: "open-cleaner" });
-      togglePanel(false);
-    }),
-  );
-  btns.appendChild(
-    mkBtn(S.copy, async () => {
-      try {
-        await navigator.clipboard.writeText(location.href);
-      } catch {
-        const ta = document.createElement("textarea");
-        ta.value = location.href;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-      }
-      flash(S.copied);
-    }),
-  );
-  btns.appendChild(
-    mkBtn(S.qr, () => {
-      chrome.runtime.sendMessage({ type: "open-qr", url: location.href });
-      togglePanel(false);
-    }),
-  );
-  btns.appendChild(
-    mkBtn(S.hide, async () => {
-      const s = await loadSettings();
-      await saveSettings({ ...s, floatingBall: false });
-      unmount();
-    }),
-  );
-  panel.appendChild(btns);
-
-  let inputTimer: any = null;
-  const renderRows = (q: string) => {
-    rows.innerHTML = "";
-    if (!q) return;
-    searchBookmarks(q).then((items) => {
-      if (!items.length) {
-        const d = document.createElement("div");
-        d.className = "muted";
-        d.textContent = langKey === "zh" ? "无匹配书签" : "No matches";
-        rows.appendChild(d);
-        return;
-      }
-      for (const it of items) {
-        const row = document.createElement("div");
-        row.className = "hit";
-        let host = "";
-        try {
-          host = new URL(it.url).hostname.replace(/^www\./, "");
-        } catch {
-          host = it.url;
-        }
-        const img = document.createElement("img");
-        img.src = `https://www.google.com/s2/favicons?domain=${host}&sz=32`;
-        img.onerror = () => img.remove();
-        const t = document.createElement("div");
-        t.className = "t";
-        t.textContent = it.title;
-        const u = document.createElement("div");
-        u.className = "u";
-        u.textContent = host;
-        row.appendChild(img);
-        row.appendChild(t);
-        row.appendChild(u);
-        row.addEventListener("click", () => {
-          window.location.href = it.url;
-        });
-        rows.appendChild(row);
-      }
-    });
-  };
-
-  input.addEventListener("input", () => {
-    const q = input.value.trim();
-    if (inputTimer) clearTimeout(inputTimer);
-    inputTimer = setTimeout(() => renderRows(q), 120);
-  });
-
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      const q = input.value.trim();
-      if (!q) return;
-      const first = rows.querySelector(".hit") as HTMLDivElement | null;
-      if (first) {
-        first.click();
-        return;
-      }
-      chrome.runtime.sendMessage({ type: "search-bookmarks", query: q });
-      togglePanel(false);
-    } else if (e.key === "Escape") {
-      togglePanel(false);
-    }
-  });
+  let items: FlatItem[] = [];
+  let activeIndex = 0;
 
   const togglePanel = (force?: boolean) => {
     isOpen = force ?? !isOpen;
     panel.style.display = isOpen ? "block" : "none";
     if (isOpen) {
       const rect = ball.getBoundingClientRect();
-      const panelHeight = panel.offsetHeight || 360;
-      const panelWidth = panel.offsetWidth || 320;
+      const panelHeight = panel.offsetHeight || 420;
+      const panelWidth = panel.offsetWidth || 460;
       const top = Math.max(8, rect.top - panelHeight - 8);
       const left = Math.max(
         8,
@@ -341,9 +354,216 @@ async function mount() {
       );
       panel.style.top = `${top}px`;
       panel.style.left = `${left}px`;
-      setTimeout(() => input.focus(), 30);
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 30);
     }
   };
+
+  const actionDefs: FlatItem[] = [
+    {
+      kind: "action",
+      label: S.sidepanel,
+      iconSvg: ICON.panel,
+      onRun: () => {
+        chrome.runtime.sendMessage({ type: "open-sidepanel" });
+        togglePanel(false);
+      },
+    },
+    {
+      kind: "action",
+      label: S.cleaner,
+      iconSvg: ICON.sparkles,
+      onRun: () => {
+        chrome.runtime.sendMessage({ type: "open-cleaner" });
+        togglePanel(false);
+      },
+    },
+    {
+      kind: "action",
+      label: S.copy,
+      iconSvg: ICON.copy,
+      onRun: async () => {
+        try {
+          await navigator.clipboard.writeText(location.href);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = location.href;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        }
+        flash(S.copied);
+      },
+    },
+    {
+      kind: "action",
+      label: S.qr,
+      iconSvg: ICON.qr,
+      onRun: () => {
+        chrome.runtime.sendMessage({ type: "open-qr", url: location.href });
+        togglePanel(false);
+      },
+    },
+    {
+      kind: "action",
+      label: S.hide,
+      iconSvg: ICON.x,
+      onRun: async () => {
+        const s = await loadSettings();
+        await saveSettings({ ...s, floatingBall: false });
+        unmount();
+      },
+    },
+  ];
+
+  const setActive = (idx: number) => {
+    if (!items.length) {
+      activeIndex = 0;
+      return;
+    }
+    activeIndex = Math.max(0, Math.min(items.length - 1, idx));
+    const rows = body.querySelectorAll<HTMLDivElement>(".row");
+    rows.forEach((r) => r.classList.remove("is-active"));
+    const rowEl = body.querySelector<HTMLDivElement>(
+      `.row[data-idx="${activeIndex}"]`,
+    );
+    if (rowEl) {
+      rowEl.classList.add("is-active");
+      const bodyRect = body.getBoundingClientRect();
+      const rRect = rowEl.getBoundingClientRect();
+      if (rRect.bottom > bodyRect.bottom) {
+        body.scrollTop += rRect.bottom - bodyRect.bottom + 4;
+      } else if (rRect.top < bodyRect.top) {
+        body.scrollTop -= bodyRect.top - rRect.top + 4;
+      }
+    }
+  };
+
+  const runActive = () => {
+    const it = items[activeIndex];
+    if (it) it.onRun();
+  };
+
+  const appendRow = (it: FlatItem) => {
+    const idx = items.length;
+    items.push(it);
+    const row = document.createElement("div");
+    row.className = "row";
+    row.setAttribute("data-idx", String(idx));
+
+    if (it.iconImg) {
+      const iconWrap = document.createElement("span");
+      iconWrap.className = "icon";
+      const img = document.createElement("img");
+      img.src = it.iconImg;
+      img.onerror = () => {
+        img.remove();
+        iconWrap.innerHTML = ICON.bookmark;
+      };
+      iconWrap.appendChild(img);
+      row.appendChild(iconWrap);
+    } else if (it.iconSvg) {
+      row.appendChild(svgSpan(it.iconSvg));
+    }
+
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = it.label;
+    row.appendChild(label);
+
+    if (it.meta) {
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = it.meta;
+      row.appendChild(meta);
+    }
+
+    row.addEventListener("mouseenter", () => setActive(idx));
+    row.addEventListener("click", () => {
+      activeIndex = idx;
+      runActive();
+    });
+    body.appendChild(row);
+  };
+
+  const renderItems = (q: string, bookmarks: SimpleBookmark[]) => {
+    body.innerHTML = "";
+    items = [];
+
+    if (q) {
+      const title = document.createElement("div");
+      title.className = "section-title";
+      title.textContent = S.sectionBookmarks;
+      body.appendChild(title);
+      if (!bookmarks.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = S.emptyBookmarks;
+        body.appendChild(empty);
+      } else {
+        for (const b of bookmarks) {
+          let hostname = "";
+          try {
+            hostname = new URL(b.url).hostname.replace(/^www\./, "");
+          } catch {
+            hostname = b.url;
+          }
+          appendRow({
+            kind: "bookmark",
+            label: b.title || hostname,
+            meta: hostname,
+            iconImg: `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
+            onRun: () => {
+              window.location.href = b.url;
+            },
+          });
+        }
+      }
+    }
+
+    const actTitle = document.createElement("div");
+    actTitle.className = "section-title";
+    actTitle.textContent = S.sectionActions;
+    body.appendChild(actTitle);
+    for (const a of actionDefs) appendRow(a);
+
+    setActive(0);
+  };
+
+  let inputTimer: any = null;
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    if (inputTimer) clearTimeout(inputTimer);
+    if (!q) {
+      renderItems("", []);
+      return;
+    }
+    inputTimer = setTimeout(async () => {
+      const hits = await searchBookmarks(q);
+      renderItems(q, hits);
+    }, 120);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive(activeIndex + 1 >= items.length ? 0 : activeIndex + 1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(activeIndex - 1 < 0 ? items.length - 1 : activeIndex - 1);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      runActive();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      togglePanel(false);
+    }
+  });
+
+  renderItems("", []);
 
   let dragStart: {
     x: number;

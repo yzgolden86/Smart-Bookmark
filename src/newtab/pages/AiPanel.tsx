@@ -1,16 +1,24 @@
 import { useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { chat } from "@/lib/ai";
 import { getBookmarkContextForAi } from "@/lib/aiBookmarkContext";
 import type { AiMessage, Settings } from "@/types";
 import { cn } from "@/lib/utils";
-import { Bot, Send, Sparkles, Square, User } from "lucide-react";
+import { Send, Sparkles, Square } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
-const SYSTEM_PROMPT =
-  "You are the Smart Bookmark assistant. A snapshot of the user's local Chrome bookmarks (counts, folder breakdown, sample links) is appended below under --- when available. Use it to answer how many bookmarks they have, what domains appear, and similar. Keep answers concise, use bullet points, match the user's language.";
+const SYSTEM_PROMPT = [
+  "You are Smart Bookmark Agent — an AI agent that works on top of the user's local Chrome bookmarks.",
+  "Your core capabilities:",
+  "- Answer questions grounded in the user's bookmark snapshot (counts, folders, domains, titles).",
+  "- Recommend organization schemes (folders, tags, topics) and point out imbalance.",
+  "- Flag potential duplicates, stale or suspicious URLs, and suggest cleanup.",
+  "- Surface relevant saved links when the user asks about a topic, and propose related sites worth bookmarking.",
+  "- Help craft search queries to find things they already saved.",
+  "A snapshot of the user's bookmarks (counts, folder breakdown, sample titles + URLs) is appended below under '---'. Prefer grounding your answers in it. If the user asks something unrelated to their bookmarks, answer briefly and steer back to what you can do for their collection.",
+  "Style: concise, use bullet points, reply in the user's language (Chinese ↔ English). Never fabricate bookmarks that don't appear in the snapshot.",
+].join("\n");
 
 function formatMsgTime(
   at: number | undefined,
@@ -42,8 +50,8 @@ export default function AiPanel({ settings }: { settings: Settings }) {
       ? t("ai.disabled")
       : `${settings.aiProvider} · ${settings.aiModel}`;
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text) return;
     if (settings.aiProvider === "none" || !settings.aiApiKey) {
       alert(t("ai.needKey"));
@@ -109,88 +117,151 @@ export default function AiPanel({ settings }: { settings: Settings }) {
 
   const stop = () => abortRef.current?.abort();
 
+  const isAiLive = settings.aiProvider !== "none";
+
   return (
-    <Card className="flex h-[72vh] flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> {t("ai.title")}
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            {modelLine}
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden">
-        <div className="flex-1 space-y-6 overflow-auto rounded-lg border bg-muted/30 p-4 scrollbar-thin">
+    <div className="mx-auto flex h-[calc(100vh-10rem)] w-full max-w-3xl flex-col">
+      <header className="mb-3 flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2.5 font-serif text-[1.1rem] tracking-tight">
+          <Sparkles
+            className="h-4 w-4"
+            style={{ color: "hsl(var(--claude-accent))" }}
+            strokeWidth={1.8}
+          />
+          <span className="font-semibold">{t("ai.title")}</span>
+        </div>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10.5px]",
+            isAiLive
+              ? "bg-background/60"
+              : "bg-muted/60 text-muted-foreground",
+          )}
+          style={
+            isAiLive
+              ? { color: "hsl(var(--claude-ink-muted))" }
+              : undefined
+          }
+          title={isAiLive ? modelLine : t("ai.disabled")}
+        >
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              isAiLive
+                ? "bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.15)]"
+                : "bg-muted-foreground/40",
+            )}
+            aria-hidden
+          />
+          {modelLine}
+        </span>
+      </header>
+      <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+        <div
+          className="scrollbar-thin flex-1 space-y-8 overflow-auto rounded-lg px-6 py-6"
+          style={{
+            backgroundColor: "hsl(var(--claude-canvas))",
+          }}
+        >
           {!visible.length && (
-            <div className="text-center text-sm text-muted-foreground">
-              {t("ai.empty")}
+            <div className="flex flex-col items-center gap-5 px-4 py-6 text-center">
+              <div
+                className="flex h-12 w-12 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: "hsl(var(--claude-accent) / 0.12)",
+                  color: "hsl(var(--claude-accent))",
+                }}
+              >
+                <Sparkles className="h-6 w-6" strokeWidth={1.6} />
+              </div>
+              <div className="max-w-md space-y-2">
+                <h3 className="font-serif text-lg font-semibold tracking-tight">
+                  {t("ai.emptyHeading")}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "hsl(var(--claude-ink-muted))" }}
+                >
+                  {t("ai.emptyDesc")}
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2 pt-1">
+                {[
+                  t("ai.suggestOrganize"),
+                  t("ai.suggestFindDups"),
+                  t("ai.suggestRecommend"),
+                  t("ai.suggestSummary"),
+                ].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => send(s)}
+                    className="rounded-full border px-3 py-1.5 font-serif text-[12.5px] transition hover:bg-background/70"
+                    style={{
+                      borderColor: "hsl(var(--claude-rule))",
+                      color: "hsl(var(--claude-ink-muted))",
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-          {visible.map((m, i) => (
-            <div
-              key={m.at != null ? `${m.at}-${m.role}-${i}` : i}
-              className={cn(
-                "flex gap-3",
-                m.role === "user" ? "flex-row-reverse" : "flex-row",
-              )}
-            >
-              <div
-                className={cn(
-                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-sm",
-                  m.role === "user"
-                    ? "bg-gradient-to-br from-emerald-500 to-teal-600"
-                    : "bg-gradient-to-br from-violet-500 to-fuchsia-600",
-                )}
-                aria-hidden
+          {visible.map((m, i) => {
+            const isUser = m.role === "user";
+            const rail = isUser
+              ? "hsl(var(--primary))"
+              : "hsl(var(--claude-accent))";
+            return (
+              <article
+                key={m.at != null ? `${m.at}-${m.role}-${i}` : i}
+                className="pl-4"
+                style={{
+                  borderLeft: `2px solid ${rail}`,
+                }}
               >
-                {m.role === "user" ? (
-                  <User className="h-4 w-4" strokeWidth={2.2} />
-                ) : (
-                  <Bot className="h-4 w-4" strokeWidth={2.2} />
-                )}
-              </div>
-              <div
-                className={cn(
-                  "min-w-0 max-w-[min(100%,28rem)] flex-1",
-                  m.role === "user" && "flex flex-col items-end",
-                )}
-              >
-                <div
-                  className={cn(
-                    "mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground",
-                    m.role === "user" && "justify-end",
-                  )}
+                <header
+                  className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]"
+                  style={{ color: "hsl(var(--claude-ink-muted))" }}
                 >
-                  <span className="font-medium text-foreground/80">
-                    {m.role === "user"
-                      ? t("ai.userLabel")
-                      : t("ai.assistantLabel")}
+                  <span
+                    className="font-serif text-[13px] font-semibold tracking-tight text-foreground"
+                    style={isUser ? undefined : { color: rail }}
+                  >
+                    {isUser ? t("ai.userLabel") : t("ai.assistantLabel")}
                   </span>
                   {m.at != null && (
                     <time dateTime={new Date(m.at).toISOString()}>
                       {formatMsgTime(m.at, settings.language)}
                     </time>
                   )}
-                  {m.role === "assistant" && settings.aiProvider !== "none" && (
-                    <span className="rounded-md bg-background/80 px-1.5 py-0 font-mono text-[10px] text-muted-foreground">
+                  {!isUser && settings.aiProvider !== "none" && (
+                    <span className="rounded-md bg-background/60 px-1.5 py-0 font-mono text-[10px]">
                       {modelLine}
                     </span>
                   )}
-                </div>
+                </header>
                 <div
                   className={cn(
-                    "whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
-                    m.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "border bg-background text-foreground",
+                    "whitespace-pre-wrap text-[14px] leading-[1.7] text-foreground/90",
                   )}
                 >
                   {m.content ||
-                    (loading && i === visible.length - 1 ? "…" : "")}
+                    (loading && i === visible.length - 1 ? (
+                      <span
+                        className="italic"
+                        style={{ color: "hsl(var(--claude-ink-muted))" }}
+                      >
+                        …
+                      </span>
+                    ) : (
+                      ""
+                    ))}
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
         <div className="flex gap-2">
           <Input
@@ -210,12 +281,12 @@ export default function AiPanel({ settings }: { settings: Settings }) {
               <Square className="h-4 w-4" /> {t("cleaner.stop")}
             </Button>
           ) : (
-            <Button onClick={send} className="gap-2">
+            <Button onClick={() => send()} className="gap-2">
               <Send className="h-4 w-4" /> {t("ai.send")}
             </Button>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

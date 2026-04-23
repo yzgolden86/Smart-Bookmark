@@ -505,7 +505,7 @@ export default function Dashboard({ settings, initialQuery }: Props) {
               <button
                 key={f.id}
                 onClick={() => onSelectFolder(f.id)}
-                className="group flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-sm shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                className="group flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3 py-2 text-sm shadow-[0_1px_0_rgba(0,0,0,0.02)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] hover:ring-1 hover:ring-primary/20"
               >
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 text-primary">
                   <Folder className="h-3.5 w-3.5" />
@@ -555,7 +555,8 @@ export default function Dashboard({ settings, initialQuery }: Props) {
                 });
               }}
               className={cn(
-                "group relative flex flex-col items-center gap-2 rounded-2xl border bg-card p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
+                "group relative flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card p-3 text-center shadow-[0_1px_0_rgba(0,0,0,0.02)] transition-all duration-200 ease-out",
+                "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] hover:ring-1 hover:ring-primary/20",
                 canReorder && "cursor-grab",
                 dragId === b.id && "cursor-grabbing opacity-50",
                 overId === b.id && dragId !== b.id && "ring-2 ring-primary/60",
@@ -571,7 +572,7 @@ export default function Dashboard({ settings, initialQuery }: Props) {
                   canReorder && "cursor-inherit",
                 )}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 ring-1 ring-inset ring-black/5 dark:from-slate-800 dark:to-slate-900 dark:ring-white/5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 ring-1 ring-inset ring-black/5 transition-all duration-200 group-hover:ring-primary/30 group-hover:shadow-sm dark:from-slate-800 dark:to-slate-900 dark:ring-white/5">
                   <img
                     src={faviconOf(b.url)}
                     alt=""

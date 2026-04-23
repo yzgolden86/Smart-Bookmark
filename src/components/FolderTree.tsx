@@ -40,11 +40,18 @@ export default function FolderTree(props: FolderTreeProps) {
       <button
         onClick={() => onSelect("")}
         className={cn(
-          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition hover:bg-accent",
-          !selectedId && "bg-accent font-medium",
+          "relative flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/60",
+          !selectedId
+            ? "bg-primary/10 font-medium text-primary before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:rounded-full before:bg-primary"
+            : "text-foreground/85",
         )}
       >
-        <Folder className="h-4 w-4 text-primary" />
+        <Folder
+          className={cn(
+            "h-4 w-4 transition-colors",
+            !selectedId ? "text-primary" : "text-primary/60",
+          )}
+        />
         <span className="flex-1 truncate">全部书签</span>
       </button>
 
@@ -56,8 +63,9 @@ export default function FolderTree(props: FolderTreeProps) {
           <div
             key={f.id}
             className={cn(
-              "group flex items-center gap-1 rounded-md pr-1 transition hover:bg-accent",
-              isSelected && "bg-accent",
+              "group relative flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-muted/60",
+              isSelected &&
+                "bg-primary/10 text-primary before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:rounded-full before:bg-primary",
             )}
             style={{ paddingLeft: Math.max(0, f.depth - 1) * 14 + "px" }}
           >
@@ -83,16 +91,33 @@ export default function FolderTree(props: FolderTreeProps) {
               title={f.title}
             >
               {isExpanded ? (
-                <FolderOpen className="h-4 w-4 shrink-0 text-primary/80" />
+                <FolderOpen
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isSelected ? "text-primary" : "text-primary/75",
+                  )}
+                />
               ) : (
-                <Folder className="h-4 w-4 shrink-0 text-primary/60" />
+                <Folder
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isSelected ? "text-primary" : "text-primary/55",
+                  )}
+                />
               )}
               <span
                 className={cn("flex-1 truncate", isSelected && "font-medium")}
               >
                 {f.title || "(未命名)"}
               </span>
-              <span className="shrink-0 text-xs text-muted-foreground">
+              <span
+                className={cn(
+                  "shrink-0 text-[11px] tabular-nums transition-colors",
+                  isSelected
+                    ? "text-primary/80"
+                    : "text-muted-foreground",
+                )}
+              >
                 {f.count}
               </span>
             </button>

@@ -79,6 +79,7 @@ export default function SettingsPage() {
             <div className="flex flex-wrap gap-2">
               {(
                 [
+                  ["linear", t("settings.accentLinear")],
                   ["indigo", t("settings.accentIndigo")],
                   ["blue", t("settings.accentBlue")],
                   ["emerald", t("settings.accentEmerald")],
@@ -93,7 +94,7 @@ export default function SettingsPage() {
                   key={v}
                   size="sm"
                   variant={
-                    (s.accentPreset ?? "indigo") === v ? "default" : "outline"
+                    (s.accentPreset ?? "linear") === v ? "default" : "outline"
                   }
                   onClick={() =>
                     update({ accentPreset: v as AccentPreset })

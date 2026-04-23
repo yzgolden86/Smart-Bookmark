@@ -89,25 +89,25 @@ export default function App() {
             <div className="flex-1" />
             <ThemeToggle />
             <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
-              <TabsList>
-                <TabsTrigger value="dashboard" className="gap-2">
-                  <Bookmark className="h-4 w-4" /> {t("tabs.dashboard")}
-                </TabsTrigger>
-                <TabsTrigger value="cleaner" className="gap-2">
-                  <Wand2 className="h-4 w-4" /> {t("tabs.cleaner")}
-                </TabsTrigger>
-                <TabsTrigger value="compare" className="gap-2">
-                  <Columns className="h-4 w-4" /> {t("tabs.compare")}
-                </TabsTrigger>
-                <TabsTrigger value="ai" className="gap-2">
-                  <Sparkles className="h-4 w-4" /> {t("tabs.ai")}
-                </TabsTrigger>
-                <TabsTrigger value="backup" className="gap-2">
-                  <HardDriveDownload className="h-4 w-4" /> {t("tabs.backup")}
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-2">
-                  <Settings2 className="h-4 w-4" /> {t("tabs.settings")}
-                </TabsTrigger>
+              <TabsList className="h-9 gap-0.5 bg-transparent p-0">
+                {(
+                  [
+                    ["dashboard", Bookmark, t("tabs.dashboard")],
+                    ["cleaner", Wand2, t("tabs.cleaner")],
+                    ["compare", Columns, t("tabs.compare")],
+                    ["ai", Sparkles, t("tabs.ai")],
+                    ["backup", HardDriveDownload, t("tabs.backup")],
+                    ["settings", Settings2, t("tabs.settings")],
+                  ] as const
+                ).map(([id, Icon, label]) => (
+                  <TabsTrigger
+                    key={id}
+                    value={id}
+                    className="relative h-8 gap-1.5 rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none after:pointer-events-none after:absolute after:inset-x-2.5 after:-bottom-[7px] after:h-[2px] after:rounded-full after:bg-primary after:opacity-0 data-[state=active]:after:opacity-100"
+                  >
+                    <Icon className="h-3.5 w-3.5" strokeWidth={1.8} /> {label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </Tabs>
           </div>

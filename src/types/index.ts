@@ -42,6 +42,7 @@ export type Language = "auto" | "zh" | "en";
 
 /** 主色/强调色（影响 primary、ring 等） */
 export type AccentPreset =
+  | "linear"
   | "indigo"
   | "blue"
   | "emerald"

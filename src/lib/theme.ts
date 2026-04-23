@@ -14,7 +14,7 @@ export function applyTheme(mode: Settings["theme"]) {
 }
 
 export function applyAccent(preset: Settings["accentPreset"] | undefined) {
-  document.documentElement.dataset.accent = preset ?? "indigo";
+  document.documentElement.dataset.accent = preset ?? "linear";
 }
 
 export async function initTheme() {
@@ -23,7 +23,7 @@ export async function initTheme() {
   applyAccent(s.accentPreset);
   onSettingsChange((next) => {
     applyTheme(next.theme);
-    applyAccent(next.accentPreset ?? "indigo");
+    applyAccent(next.accentPreset ?? "linear");
   });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", async () => {
     const cur = await getSettings();

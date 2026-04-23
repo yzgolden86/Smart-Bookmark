@@ -62,14 +62,20 @@ const zh: Dict = {
   "cleaner.noResult": "还没有扫描结果。点击「开始扫描」开始体检。",
   "cleaner.confirmClean": (n: string) => `确定要清理 ${n} 条吗？此操作不可撤销。`,
 
-  "ai.title": "AI 助手",
-  "ai.userLabel": "用户",
-  "ai.assistantLabel": "AI 助手",
+  "ai.title": "书签代理",
+  "ai.userLabel": "你",
+  "ai.assistantLabel": "代理",
   "ai.disabled": "未启用",
-  "ai.empty": "试试问我：\"帮我推荐几个适合前端设计师的灵感网站\"",
-  "ai.placeholder": "输入问题，回车发送",
+  "ai.emptyHeading": "你的书签智能代理",
+  "ai.emptyDesc":
+    "我能基于你本机的书签做整理、去重、推荐与搜索。点击下面的例子开始，或直接说你想做的事。",
+  "ai.placeholder": "问问你的书签…例如「按主题帮我分类」",
   "ai.send": "发送",
   "ai.needKey": "请先在『设置』里选择 AI Provider 并填入 API Key。",
+  "ai.suggestOrganize": "按主题帮我整理书签",
+  "ai.suggestFindDups": "找出可能重复的书签",
+  "ai.suggestRecommend": "根据我的书签推荐相关网站",
+  "ai.suggestSummary": "总结我最常收藏的领域",
 
   "compare.title": "对比搜索",
   "compare.placeholder": "输入查询词，同时在多个搜索引擎中打开…",
@@ -97,6 +103,7 @@ const zh: Dict = {
   "settings.themeLight": "浅色",
   "settings.themeDark": "深色",
   "settings.accent": "主题色",
+  "settings.accentLinear": "Linear 紫",
   "settings.accentIndigo": "靛青",
   "settings.accentBlue": "天蓝",
   "settings.accentEmerald": "翠绿",
@@ -212,15 +219,20 @@ const en: Dict = {
   "cleaner.confirmClean": (n: string) =>
     `Are you sure to remove ${n} bookmarks? This cannot be undone.`,
 
-  "ai.title": "AI assistant",
+  "ai.title": "Bookmark Agent",
   "ai.userLabel": "You",
-  "ai.assistantLabel": "Assistant",
+  "ai.assistantLabel": "Agent",
   "ai.disabled": "Disabled",
-  "ai.empty":
-    "Try: \"Recommend a few inspiration sites for a frontend designer.\"",
-  "ai.placeholder": "Type a question, press Enter to send",
+  "ai.emptyHeading": "Your bookmark-aware agent",
+  "ai.emptyDesc":
+    "I work on top of your local bookmarks — organizing, deduping, recommending, and searching. Tap a suggestion below or just tell me what you need.",
+  "ai.placeholder": "Ask about your bookmarks… e.g. \"Group them by topic\"",
   "ai.send": "Send",
   "ai.needKey": "Pick an AI provider and set the API Key in Settings first.",
+  "ai.suggestOrganize": "Group my bookmarks by topic",
+  "ai.suggestFindDups": "Find potential duplicate bookmarks",
+  "ai.suggestRecommend": "Recommend related sites based on my bookmarks",
+  "ai.suggestSummary": "Summarize the domains I save most",
 
   "compare.title": "Compare search",
   "compare.placeholder":
@@ -249,6 +261,7 @@ const en: Dict = {
   "settings.themeLight": "Light",
   "settings.themeDark": "Dark",
   "settings.accent": "Accent color",
+  "settings.accentLinear": "Linear",
   "settings.accentIndigo": "Indigo",
   "settings.accentBlue": "Blue",
   "settings.accentEmerald": "Emerald",
