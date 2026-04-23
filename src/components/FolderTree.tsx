@@ -46,12 +46,14 @@ export default function FolderTree(props: FolderTreeProps) {
             : "text-foreground/85",
         )}
       >
-        <Folder
+        <span
           className={cn(
-            "h-4 w-4 transition-colors",
-            !selectedId ? "text-primary" : "text-primary/60",
+            "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] bg-gradient-to-br from-indigo-400/20 to-fuchsia-400/20 text-primary shadow-sm ring-1 ring-inset ring-primary/20 transition-colors",
+            !selectedId && "from-primary/25 to-fuchsia-500/25 ring-primary/40",
           )}
-        />
+        >
+          <Folder className="h-3 w-3" strokeWidth={2.2} />
+        </span>
         <span className="flex-1 truncate">全部书签</span>
       </button>
 
@@ -90,21 +92,22 @@ export default function FolderTree(props: FolderTreeProps) {
               className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left"
               title={f.title}
             >
-              {isExpanded ? (
-                <FolderOpen
-                  className={cn(
-                    "h-4 w-4 shrink-0 transition-colors",
-                    isSelected ? "text-primary" : "text-primary/75",
-                  )}
-                />
-              ) : (
-                <Folder
-                  className={cn(
-                    "h-4 w-4 shrink-0 transition-colors",
-                    isSelected ? "text-primary" : "text-primary/55",
-                  )}
-                />
-              )}
+              <span
+                className={cn(
+                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] shadow-sm ring-1 ring-inset transition-colors",
+                  isSelected
+                    ? "bg-gradient-to-br from-primary/30 to-fuchsia-500/25 text-primary ring-primary/40"
+                    : isExpanded
+                      ? "bg-gradient-to-br from-amber-200/60 to-amber-300/40 text-amber-700 ring-amber-400/30 dark:from-amber-800/40 dark:to-amber-700/30 dark:text-amber-200 dark:ring-amber-600/30"
+                      : "bg-gradient-to-br from-amber-100/70 to-amber-200/50 text-amber-700 ring-amber-300/30 dark:from-amber-900/30 dark:to-amber-800/25 dark:text-amber-300 dark:ring-amber-700/30",
+                )}
+              >
+                {isExpanded ? (
+                  <FolderOpen className="h-3 w-3" strokeWidth={2.2} />
+                ) : (
+                  <Folder className="h-3 w-3" strokeWidth={2.2} />
+                )}
+              </span>
               <span
                 className={cn("flex-1 truncate", isSelected && "font-medium")}
               >

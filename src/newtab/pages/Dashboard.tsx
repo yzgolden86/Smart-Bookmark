@@ -21,6 +21,7 @@ import {
   ChevronRight,
   X,
   Flame,
+  Clock,
 } from "lucide-react";
 import TrendingPanel from "@/components/TrendingPanel";
 import { rangeToWindowDays } from "@/lib/github";
@@ -145,7 +146,7 @@ export default function Dashboard({
       setItems(all.map((b, i) => ({ ...b, index: i })));
       setBreadcrumb(buildBreadcrumb(tree, folder.id));
     } else {
-      const flat = flatten(tree).slice(0, 200);
+      const flat = flatten(tree).slice(0, 500);
       setItems(flat.map((b, i) => ({ ...b, index: i })));
       setSubFolders([]);
       setBreadcrumb([]);
@@ -344,6 +345,15 @@ export default function Dashboard({
       .map((id) => findFolder(tree, id))
       .filter(Boolean) as BookmarkNode[];
   }, [pinnedIds, tree]);
+
+  const totalBookmarks = useMemo(() => {
+    if (selected) {
+      const folder = findFolder(tree, selected);
+      if (!folder) return 0;
+      return flatten([folder], "").length;
+    }
+    return flatten(tree).length;
+  }, [tree, selected]);
 
   const greeting = useGreeting();
   const showHero = !selected && !query.trim();
@@ -554,7 +564,7 @@ export default function Dashboard({
         </form>
 
         {showHero && topSites.length > 0 && (
-          <div className="mx-auto flex max-w-4xl flex-wrap items-start justify-center gap-4 pt-2">
+          <div className="md:hidden mx-auto flex max-w-4xl flex-wrap items-start justify-center gap-4 pt-2">
             {topSites.map((s) => (
               <a
                 key={s.url}
@@ -583,76 +593,143 @@ export default function Dashboard({
         )}
 
         {showHero && (
-          <section className="pt-2">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/20 to-rose-500/20 text-rose-500">
-                <Flame className="h-3.5 w-3.5" />
-              </div>
-              <h2 className="text-sm font-semibold tracking-tight">
-                {t("discover.widget.title")}
-              </h2>
-              <div
-                className="inline-flex items-center gap-0.5 rounded-lg border bg-card/80 p-0.5 text-[11px]"
-                role="tablist"
-                aria-label={t("discover.widget.title")}
-              >
-                {(["daily", "weekly", "monthly", "yearly"] as TrendingRange[]).map(
-                  (r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      role="tab"
-                      aria-selected={widgetRange === r}
-                      onClick={() => setWidgetRange(r)}
-                      className={cn(
-                        "rounded-md px-2 py-0.5 font-medium transition",
-                        widgetRange === r
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                      )}
+          <div className="grid grid-cols-1 gap-5 pt-2 md:grid-cols-12">
+            {topSites.length > 0 && (
+              <aside className="hidden md:col-span-4 md:block">
+                <Card className="p-3">
+                  <div className="mb-1 flex items-center gap-2 px-1">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500/20 to-indigo-500/20 text-sky-600 dark:text-sky-400">
+                      <Clock className="h-3.5 w-3.5" />
+                    </div>
+                    <h2 className="text-sm font-semibold tracking-tight">
+                      常去
+                    </h2>
+                    <span
+                      className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                      title="由 Chrome 浏览器自动统计的常访问站点"
                     >
-                      {t(`discover.range.${r}`)}
-                    </button>
-                  ),
-                )}
-              </div>
-              <div className="flex-1" />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (onOpenDiscover) {
-                    onOpenDiscover();
-                  } else {
-                    const p = new URLSearchParams(window.location.hash.slice(1));
-                    p.set("tab", "discover");
-                    const s = p.toString();
-                    window.location.hash = s ? "#" + s : "#";
-                  }
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="relative z-10 cursor-pointer rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-accent hover:text-primary"
-              >
-                {t("discover.widget.viewAll")}
-              </button>
-            </div>
-            <p className="text-[11px] leading-relaxed text-muted-foreground/90">
-              {t(
-                "discover.widget.hint",
-                t(`discover.range.${widgetRange}`),
-                String(rangeToWindowDays(widgetRange)),
+                      TOP {topSites.length}
+                    </span>
+                    <span className="ml-auto text-[10px] text-muted-foreground/70">
+                      自动
+                    </span>
+                  </div>
+                  <p className="mb-2 px-1 text-[10.5px] leading-relaxed text-muted-foreground/70">
+                    浏览器按访问频率自动更新
+                  </p>
+                  <div className="space-y-0.5">
+                    {topSites.map((s) => (
+                      <a
+                        key={s.url}
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={s.url}
+                        className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 transition hover:bg-accent"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-background ring-1 ring-border">
+                          <img
+                            src={faviconOf(s.url, 32)}
+                            alt=""
+                            className="h-4 w-4 rounded"
+                            onError={(e) =>
+                              (e.currentTarget.style.visibility = "hidden")
+                            }
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-foreground">
+                            {s.title || hostnameOf(s.url)}
+                          </div>
+                          <div className="truncate text-[11px] text-muted-foreground">
+                            {hostnameOf(s.url)}
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </Card>
+              </aside>
+            )}
+
+            <section
+              className={cn(
+                "col-span-1",
+                topSites.length > 0
+                  ? "md:col-span-8"
+                  : "md:col-span-12",
               )}
-            </p>
-            <TrendingPanel
-              settings={settings}
-              limit={6}
-              compact
-              hideControls
-              range={widgetRange}
-              onRangeChange={setWidgetRange}
-            />
-          </section>
+            >
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/20 to-rose-500/20 text-rose-500">
+                  <Flame className="h-3.5 w-3.5" />
+                </div>
+                <h2 className="text-sm font-semibold tracking-tight">
+                  {t("discover.widget.title")}
+                </h2>
+                <div
+                  className="inline-flex items-center gap-0.5 rounded-lg border bg-card/80 p-0.5 text-[11px]"
+                  role="tablist"
+                  aria-label={t("discover.widget.title")}
+                >
+                  {(["daily", "weekly", "monthly", "yearly"] as TrendingRange[]).map(
+                    (r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        role="tab"
+                        aria-selected={widgetRange === r}
+                        onClick={() => setWidgetRange(r)}
+                        className={cn(
+                          "rounded-md px-2 py-0.5 font-medium transition",
+                          widgetRange === r
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        )}
+                      >
+                        {t(`discover.range.${r}`)}
+                      </button>
+                    ),
+                  )}
+                </div>
+                <div className="flex-1" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onOpenDiscover) {
+                      onOpenDiscover();
+                    } else {
+                      const p = new URLSearchParams(window.location.hash.slice(1));
+                      p.set("tab", "discover");
+                      const s = p.toString();
+                      window.location.hash = s ? "#" + s : "#";
+                    }
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="relative z-10 cursor-pointer rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-accent hover:text-primary"
+                >
+                  {t("discover.widget.viewAll")}
+                </button>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground/90">
+                {t(
+                  "discover.widget.hint",
+                  t(`discover.range.${widgetRange}`),
+                  String(rangeToWindowDays(widgetRange)),
+                )}
+              </p>
+              <TrendingPanel
+                settings={settings}
+                limit={8}
+                compact
+                hideControls
+                range={widgetRange}
+                onRangeChange={setWidgetRange}
+              />
+            </section>
+          </div>
         )}
 
         {!showHero && breadcrumb.length > 0 && (
@@ -693,11 +770,40 @@ export default function Dashboard({
           </div>
         )}
 
-        {canReorder && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <GripVertical className="h-3.5 w-3.5" /> {t("dash.dragHint")}
-          </div>
-        )}
+        {(showHero || (!subFolders.length && breadcrumb.length === 0)) &&
+          filtered.length > 0 && (
+            <div className="flex items-end justify-between border-b pb-1.5 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 text-primary">
+                  <Folder className="h-3.5 w-3.5" />
+                </div>
+                <h2 className="text-sm font-semibold tracking-tight">
+                  我的书签
+                </h2>
+                <span className="text-[11px] text-muted-foreground">
+                  · 共 {totalBookmarks} 个
+                </span>
+                {filtered.length < totalBookmarks && !query.trim() && (
+                  <span className="text-[11px] text-muted-foreground/70">
+                    （展示前 {filtered.length}）
+                  </span>
+                )}
+              </div>
+              {canReorder && (
+                <span className="hidden items-center gap-1 text-[11px] text-muted-foreground sm:inline-flex">
+                  <GripVertical className="h-3 w-3" />
+                  {t("dash.dragHint")}
+                </span>
+              )}
+            </div>
+          )}
+
+        {canReorder &&
+          !(showHero || (!subFolders.length && breadcrumb.length === 0)) && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <GripVertical className="h-3.5 w-3.5" /> {t("dash.dragHint")}
+            </div>
+          )}
 
         <div
           className={cn(
