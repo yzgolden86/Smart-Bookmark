@@ -8,7 +8,10 @@ import type { AccentPreset, Settings } from "@/types";
 import { useT } from "@/lib/i18n";
 import { testAi } from "@/lib/ai";
 import { BUILTIN_ENGINES, faviconFor } from "@/lib/engines";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Flame, ExternalLink } from "lucide-react";
+import { COMMON_LANGUAGES, clearTrendingCache } from "@/lib/github";
+import type { TrendingRange } from "@/types";
+import { toast } from "@/components/ui/toast";
 
 const ENGINE_LIST = BUILTIN_ENGINES.slice(0, 10);
 
@@ -356,6 +359,93 @@ export default function SettingsPage() {
           <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
             {t("settings.apiKeyNotice")} OpenAI 兼容接口（DeepSeek/Moonshot Kimi/LM Studio/Ollama 等）可通过自定义 Base URL 使用。
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Flame className="h-4 w-4 text-rose-500" />
+            {t("settings.discover")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Row label={t("settings.githubToken")}>
+            <div className="space-y-2">
+              <Input
+                type="password"
+                value={s.githubToken ?? ""}
+                placeholder="ghp_••••••••••••••••••••••••••••••••••••"
+                onChange={(e) => update({ githubToken: e.target.value })}
+              />
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://github.com/settings/tokens/new?description=Smart%20Bookmark&scopes=public_repo"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  {t("settings.githubTokenCreate")}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    await clearTrendingCache();
+                    toast("已清空 GitHub Trending 缓存", "success");
+                  }}
+                >
+                  清空缓存
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {t("settings.githubTokenHint")}
+              </div>
+            </div>
+          </Row>
+          <Row label={t("settings.discoverDefaults")}>
+            <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  ["daily", t("discover.range.daily")],
+                  ["weekly", t("discover.range.weekly")],
+                  ["monthly", t("discover.range.monthly")],
+                  ["yearly", t("discover.range.yearly")],
+                ] as const
+              ).map(([v, label]) => (
+                <Button
+                  key={v}
+                  size="sm"
+                  variant={
+                    (s.discoverDefaultRange ?? "weekly") === v
+                      ? "default"
+                      : "outline"
+                  }
+                  onClick={() =>
+                    update({ discoverDefaultRange: v as TrendingRange })
+                  }
+                >
+                  {label}
+                </Button>
+              ))}
+              <div className="mx-2 h-5 w-px bg-border" />
+              <select
+                value={s.discoverDefaultLanguage ?? ""}
+                onChange={(e) =>
+                  update({ discoverDefaultLanguage: e.target.value })
+                }
+                className="rounded-md border bg-background px-2 py-1 text-sm"
+              >
+                <option value="">{t("discover.language.all")}</option>
+                {COMMON_LANGUAGES.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </Row>
         </CardContent>
       </Card>
     </div>

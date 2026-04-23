@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Bookmark,
@@ -7,6 +7,7 @@ import {
   Settings2,
   Columns,
   HardDriveDownload,
+  Flame,
 } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import Cleaner from "./pages/Cleaner";
@@ -14,6 +15,7 @@ import AiPanel from "./pages/AiPanel";
 import SettingsPage from "./pages/Settings";
 import Compare from "./pages/Compare";
 import BackupPage from "./pages/Backup";
+import Discover from "./pages/Discover";
 import QrDialog from "./pages/QrDialog";
 import { getSettings, onSettingsChange } from "@/lib/storage";
 import type { Settings } from "@/types";
@@ -21,7 +23,14 @@ import { useT } from "@/lib/i18n";
 import { ToastHost } from "@/components/ui/toast";
 import ThemeToggle from "@/components/ThemeToggle";
 
-type TabId = "dashboard" | "cleaner" | "ai" | "compare" | "backup" | "settings";
+type TabId =
+  | "dashboard"
+  | "discover"
+  | "cleaner"
+  | "ai"
+  | "compare"
+  | "backup"
+  | "settings";
 
 function readHashTab(): TabId {
   const h = window.location.hash.slice(1);
@@ -32,7 +41,8 @@ function readHashTab(): TabId {
     t === "ai" ||
     t === "settings" ||
     t === "compare" ||
-    t === "backup"
+    t === "backup" ||
+    t === "discover"
   )
     return t;
   return "dashboard";
@@ -49,6 +59,18 @@ export default function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [initialQuery] = useState(() => readHashParam("q"));
   const [qr, setQr] = useState<string>(() => readHashParam("qr"));
+
+  /** 切换 Tab 并同步到 hash，避免只改 state 导致地址栏与「查看全部」和 Hash 不同步。 */
+  const setTabWithHash = useCallback((id: TabId) => {
+    setTab(id);
+    const p = new URLSearchParams(window.location.hash.slice(1));
+    p.set("tab", id);
+    const s = p.toString();
+    const next = s ? "#" + s : "#";
+    if (window.location.hash !== next) {
+      window.location.hash = next;
+    }
+  }, []);
 
   useEffect(() => {
     getSettings().then(setSettings);
@@ -88,11 +110,12 @@ export default function App() {
             </div>
             <div className="flex-1" />
             <ThemeToggle />
-            <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
+            <Tabs value={tab} onValueChange={(v) => setTabWithHash(v as TabId)}>
               <TabsList className="h-9 gap-0.5 bg-transparent p-0">
                 {(
                   [
                     ["dashboard", Bookmark, t("tabs.dashboard")],
+                    ["discover", Flame, t("tabs.discover")],
                     ["cleaner", Wand2, t("tabs.cleaner")],
                     ["compare", Columns, t("tabs.compare")],
                     ["ai", Sparkles, t("tabs.ai")],
@@ -115,8 +138,13 @@ export default function App() {
 
         <main className="mx-auto max-w-7xl px-6 py-6">
           {tab === "dashboard" && (
-            <Dashboard settings={settings} initialQuery={initialQuery} />
+            <Dashboard
+              settings={settings}
+              initialQuery={initialQuery}
+              onOpenDiscover={() => setTabWithHash("discover")}
+            />
           )}
+          {tab === "discover" && <Discover settings={settings} />}
           {tab === "cleaner" && <Cleaner />}
           {tab === "compare" && <Compare settings={settings} />}
           {tab === "ai" && <AiPanel settings={settings} />}

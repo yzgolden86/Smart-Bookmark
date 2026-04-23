@@ -5,7 +5,7 @@ import {
   findFolder,
   moveBookmark,
 } from "@/lib/bookmarks";
-import type { BookmarkNode, FlatBookmark, Settings } from "@/types";
+import type { BookmarkNode, FlatBookmark, Settings, TrendingRange } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,11 @@ import {
   Folder,
   History as HistoryIcon,
   ChevronRight,
+  X,
+  Flame,
 } from "lucide-react";
+import TrendingPanel from "@/components/TrendingPanel";
+import { rangeToWindowDays } from "@/lib/github";
 import { setSettings } from "@/lib/storage";
 import { useT } from "@/lib/i18n";
 import { toast } from "@/components/ui/toast";
@@ -31,6 +35,8 @@ import { findEngine } from "@/lib/engines";
 interface Props {
   settings: Settings;
   initialQuery?: string;
+  /** 从首页热门 widget 跳到「发现」页（与地址栏 hash 同步，避免点击无反应） */
+  onOpenDiscover?: () => void;
 }
 
 interface FolderBookmark extends FlatBookmark {
@@ -48,7 +54,11 @@ interface HistoryHit {
   source: "history" | "bookmark";
 }
 
-export default function Dashboard({ settings, initialQuery }: Props) {
+export default function Dashboard({
+  settings,
+  initialQuery,
+  onOpenDiscover,
+}: Props) {
   const t = useT();
   const [tree, setTree] = useState<BookmarkNode[]>([]);
   const [selected, setSelected] = useState<string>(
@@ -70,7 +80,17 @@ export default function Dashboard({ settings, initialQuery }: Props) {
   const [topSites, setTopSites] = useState<TopSite[]>([]);
   const [historyHits, setHistoryHits] = useState<HistoryHit[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [widgetRange, setWidgetRange] = useState<TrendingRange>(
+    settings.discoverDefaultRange ?? "weekly",
+  );
   const searchWrapRef = useRef<HTMLFormElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isMac = useMemo(
+    () =>
+      typeof navigator !== "undefined" &&
+      /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent),
+    [],
+  );
 
   const expanded = useMemo(
     () => new Set(settings.expandedFolders ?? []),
@@ -292,6 +312,32 @@ export default function Dashboard({ settings, initialQuery }: Props) {
     return () => window.removeEventListener("click", close);
   }, [searchFocused]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const isTyping =
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        (target?.isContentEditable ?? false);
+      const meta = isMac ? e.metaKey : e.ctrlKey;
+      if (meta && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        setSearchFocused(true);
+        return;
+      }
+      if (!isTyping && e.key === "/") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        setSearchFocused(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMac]);
+
   const pinnedFolders = useMemo(() => {
     const ids = Array.from(pinnedIds);
     return ids
@@ -350,7 +396,7 @@ export default function Dashboard({ settings, initialQuery }: Props) {
               {greeting} <span className="ml-1">👋</span>
             </div>
             <div className="mt-1 text-sm text-muted-foreground">
-              Ctrl + Enter 可在全部引擎中打开
+              {t("dash.kbdHint")}
             </div>
           </div>
         )}
@@ -363,15 +409,25 @@ export default function Dashboard({ settings, initialQuery }: Props) {
           )}
           ref={searchWrapRef}
         >
-          <div className="relative flex items-center gap-2 rounded-full border bg-card pl-2 pr-1 shadow-sm focus-within:ring-2 focus-within:ring-ring/40">
+          <div
+            className={cn(
+              "group/search relative flex items-center gap-1.5 rounded-2xl border bg-card pl-1.5 pr-1.5 shadow-sm transition-all duration-200",
+              "focus-within:border-primary/40 focus-within:shadow-md focus-within:ring-2 focus-within:ring-primary/20",
+            )}
+          >
             <EngineSwitcher
               settings={settings}
               value={settings.searchEngine}
               onChange={onChangeEngine}
             />
+            <span
+              aria-hidden
+              className="h-5 w-px bg-border/80"
+            />
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 autoFocus
                 value={query}
                 onChange={(e) => {
@@ -381,7 +437,12 @@ export default function Dashboard({ settings, initialQuery }: Props) {
                 onClick={() => setSearchFocused(true)}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
-                    setSearchFocused(false);
+                    if (query) {
+                      setQuery("");
+                    } else {
+                      setSearchFocused(false);
+                      searchInputRef.current?.blur();
+                    }
                     return;
                   }
                   if (
@@ -400,17 +461,58 @@ export default function Dashboard({ settings, initialQuery }: Props) {
                   if (!searchFocused) setSearchFocused(true);
                 }}
                 placeholder={t("dash.searchPlaceholder")}
-                className="h-11 border-0 bg-transparent pl-8 shadow-none focus-visible:ring-0"
+                className="h-11 border-0 bg-transparent pl-8 pr-1 shadow-none focus-visible:ring-0"
               />
             </div>
+            {query && (
+              <button
+                type="button"
+                aria-label={t("dash.searchClear")}
+                title={t("dash.searchClear")}
+                onClick={() => {
+                  setQuery("");
+                  searchInputRef.current?.focus();
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            {!query && (
+              <kbd
+                aria-hidden
+                className="pointer-events-none hidden select-none items-center gap-1 rounded-md border bg-muted/60 px-1.5 py-0.5 font-mono text-[10.5px] font-medium text-muted-foreground shadow-sm sm:inline-flex"
+              >
+                <span className="text-[11px] leading-none">
+                  {isMac ? "⌘" : "Ctrl"}
+                </span>
+                <span className="leading-none">K</span>
+              </kbd>
+            )}
             <Button
               type="submit"
-              className="h-9 rounded-full px-5"
+              className="ml-1 h-9 w-9 rounded-xl p-0 sm:w-auto sm:px-4"
               variant="default"
+              aria-label={t("common.search")}
+              title={t("common.search")}
             >
-              {t("common.search")}
+              <Search className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">{t("common.search")}</span>
             </Button>
           </div>
+
+          {searchFocused && query.trim() && (
+            <div className="mx-2 mt-1.5 flex items-center justify-between px-1 text-[11px] text-muted-foreground">
+              <span>
+                {filtered.length > 0
+                  ? t("dash.matchCount", String(filtered.length))
+                  : t("dash.matchNone")}
+              </span>
+              <span className="hidden items-center gap-2 sm:flex">
+                <span>{t("dash.kbdHint")}</span>
+              </span>
+            </div>
+          )}
 
           {searchFocused && historyHits.length > 0 && (
             <div className="relative">
@@ -478,6 +580,79 @@ export default function Dashboard({ settings, initialQuery }: Props) {
               </a>
             ))}
           </div>
+        )}
+
+        {showHero && (
+          <section className="pt-2">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/20 to-rose-500/20 text-rose-500">
+                <Flame className="h-3.5 w-3.5" />
+              </div>
+              <h2 className="text-sm font-semibold tracking-tight">
+                {t("discover.widget.title")}
+              </h2>
+              <div
+                className="inline-flex items-center gap-0.5 rounded-lg border bg-card/80 p-0.5 text-[11px]"
+                role="tablist"
+                aria-label={t("discover.widget.title")}
+              >
+                {(["daily", "weekly", "monthly", "yearly"] as TrendingRange[]).map(
+                  (r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      role="tab"
+                      aria-selected={widgetRange === r}
+                      onClick={() => setWidgetRange(r)}
+                      className={cn(
+                        "rounded-md px-2 py-0.5 font-medium transition",
+                        widgetRange === r
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                      )}
+                    >
+                      {t(`discover.range.${r}`)}
+                    </button>
+                  ),
+                )}
+              </div>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (onOpenDiscover) {
+                    onOpenDiscover();
+                  } else {
+                    const p = new URLSearchParams(window.location.hash.slice(1));
+                    p.set("tab", "discover");
+                    const s = p.toString();
+                    window.location.hash = s ? "#" + s : "#";
+                  }
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="relative z-10 cursor-pointer rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-accent hover:text-primary"
+              >
+                {t("discover.widget.viewAll")}
+              </button>
+            </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground/90">
+              {t(
+                "discover.widget.hint",
+                t(`discover.range.${widgetRange}`),
+                String(rangeToWindowDays(widgetRange)),
+              )}
+            </p>
+            <TrendingPanel
+              settings={settings}
+              limit={6}
+              compact
+              hideControls
+              range={widgetRange}
+              onRangeChange={setWidgetRange}
+            />
+          </section>
         )}
 
         {!showHero && breadcrumb.length > 0 && (

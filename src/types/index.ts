@@ -78,6 +78,30 @@ export interface Settings {
   customEngines: CustomEngine[];
   expandedFolders: string[];
   pinnedFolderIds: string[];
+  /** GitHub Personal Access Token（用于 Discover 拉 trending 提高配额） */
+  githubToken?: string;
+  /** Discover 页默认时段 */
+  discoverDefaultRange?: TrendingRange;
+  /** Discover 页默认语言（空=全部） */
+  discoverDefaultLanguage?: string;
+}
+
+export type TrendingRange = "daily" | "weekly" | "monthly" | "yearly";
+
+export interface TrendingRepo {
+  id: number;
+  fullName: string;
+  owner: string;
+  name: string;
+  description: string;
+  language: string;
+  stars: number;
+  forks: number;
+  url: string;
+  avatar: string;
+  topics: string[];
+  createdAt: string;
+  pushedAt: string;
 }
 
 export interface AiMessage {

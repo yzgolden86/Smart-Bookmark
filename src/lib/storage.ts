@@ -20,6 +20,9 @@ export const DEFAULT_SETTINGS: Settings = {
   customEngines: [],
   expandedFolders: [],
   pinnedFolderIds: [],
+  githubToken: "",
+  discoverDefaultRange: "weekly",
+  discoverDefaultLanguage: "",
 };
 
 const hasChromeStorage = typeof chrome !== "undefined" && !!chrome.storage?.local;

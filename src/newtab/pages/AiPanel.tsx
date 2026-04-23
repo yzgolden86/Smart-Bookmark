@@ -5,8 +5,10 @@ import { chat } from "@/lib/ai";
 import { getBookmarkContextForAi } from "@/lib/aiBookmarkContext";
 import type { AiMessage, Settings } from "@/types";
 import { cn } from "@/lib/utils";
-import { Send, Sparkles, Square } from "lucide-react";
+import { Send, Sparkles, Square, Flame, Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { fetchTrending, trendingToMarkdown } from "@/lib/github";
+import { toast } from "@/components/ui/toast";
 
 const SYSTEM_PROMPT = [
   "You are Smart Bookmark Agent — an AI agent that works on top of the user's local Chrome bookmarks.",
@@ -42,7 +44,41 @@ export default function AiPanel({ settings }: { settings: Settings }) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [injectingTrending, setInjectingTrending] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  const injectTrending = async () => {
+    setInjectingTrending(true);
+    try {
+      const data = await fetchTrending({
+        range: settings.discoverDefaultRange ?? "weekly",
+        language: settings.discoverDefaultLanguage || undefined,
+        limit: 20,
+        token: settings.githubToken || undefined,
+      });
+      const md = trendingToMarkdown(data, {
+        range: settings.discoverDefaultRange ?? "weekly",
+        language: settings.discoverDefaultLanguage,
+      });
+      const now = Date.now();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "user",
+          content: `下面是我从 GitHub 拉到的热门项目，请基于它回答接下来的问题，或给出概览。\n\n${md}`,
+          at: now,
+        },
+      ]);
+      toast(t("discover.injectedAi", String(data.length)), "success");
+    } catch (err) {
+      toast(
+        t("discover.error") + ": " + ((err as Error)?.message ?? ""),
+        "error",
+      );
+    } finally {
+      setInjectingTrending(false);
+    }
+  };
 
   const visible = messages.filter((m) => m.role !== "system");
   const modelLine =
@@ -130,6 +166,22 @@ export default function AiPanel({ settings }: { settings: Settings }) {
           />
           <span className="font-semibold">{t("ai.title")}</span>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={injectTrending}
+            disabled={injectingTrending}
+            className="gap-1.5 text-xs"
+            title={t("discover.injectAi")}
+          >
+            {injectingTrending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Flame className="h-3.5 w-3.5 text-rose-500" />
+            )}
+            {t("discover.injectAi")}
+          </Button>
         <span
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10.5px]",
@@ -155,6 +207,7 @@ export default function AiPanel({ settings }: { settings: Settings }) {
           />
           {modelLine}
         </span>
+        </div>
       </header>
       <div className="flex flex-1 flex-col gap-3 overflow-hidden">
         <div

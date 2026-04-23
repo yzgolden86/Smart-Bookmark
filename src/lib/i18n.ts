@@ -15,6 +15,7 @@ const zh: Dict = {
   "tabs.compare": "对比搜索",
   "tabs.backup": "备份",
   "tabs.settings": "设置",
+  "tabs.discover": "发现",
 
   "common.search": "搜索",
   "common.cancel": "取消",
@@ -36,10 +37,54 @@ const zh: Dict = {
 
   "dash.folders": "书签文件夹",
   "dash.all200": "全部（前 200）",
-  "dash.searchPlaceholder": "搜索书签，或按回车用搜索引擎查询…",
+  "dash.searchPlaceholder": "搜索书签或网络…",
   "dash.empty": "无匹配书签。按回车可直接用搜索引擎查询。",
   "dash.dropHint": "松开鼠标放置到这里",
   "dash.dragHint": "按住卡片拖拽可自定义顺序",
+  "dash.kbdHint": "Ctrl + Enter 可在全部引擎中打开",
+  "dash.searchClear": "清空",
+  "dash.matchCount": (n: string) =>
+    `匹配 ${n} 个书签 · Enter 走搜索引擎`,
+  "dash.matchNone": "无书签匹配 · Enter 走搜索引擎",
+
+  "discover.title": "GitHub 热门",
+  "discover.subtitle":
+    "基于 GitHub Search：在下方选择日 / 周 / 月 / 年 设定「仓库创建时间」窗口，再按 star 数排序（与 GitHub 官网 Trending 页算法不同）。",
+  "discover.trendingExplainer":
+    "同一套规则：时间窗内新建的公开仓库，按 star 降序。",
+  "discover.widget.hint": (range: string, days: string) =>
+    `已选「${range}」：近 ${days} 天内创建的仓库，按 star 数排序。`,
+  "discover.range.daily": "今日",
+  "discover.range.weekly": "本周",
+  "discover.range.monthly": "本月",
+  "discover.range.yearly": "本年",
+  "discover.language.all": "全部语言",
+  "discover.refresh": "刷新",
+  "discover.loading": "正在拉取热门项目…",
+  "discover.empty": "暂无结果，换个条件或稍后再试。",
+  "discover.error": "拉取失败",
+  "discover.stars": (n: string) => `${n} Stars`,
+  "discover.forks": (n: string) => `${n} Forks`,
+  "discover.addBookmark": "加到书签",
+  "discover.addedBookmark": "已加到书签",
+  "discover.copy": "复制链接",
+  "discover.open": "打开",
+  "discover.more": "查看全部",
+  "discover.widget.title": "GitHub 热门",
+  "discover.widget.viewAll": "查看全部 →",
+  "discover.injectAi": "注入当前 trending",
+  "discover.injectedAi": (n: string) => `已把 ${n} 条热门项目注入 AI 会话。`,
+  "discover.updated": (t: string) => `更新于 ${t}`,
+  "discover.needToken": "未配置 GitHub Token，未认证请求 60 次/小时。前往设置填入。",
+  "discover.cacheHit": "来自缓存",
+  "settings.discover": "发现 / GitHub 热门",
+  "settings.githubToken": "GitHub Personal Access Token",
+  "settings.githubTokenHint":
+    "可选。只需 public_repo 权限即可。填写后 API 限额从 60/h 提升到 5000/h。",
+  "settings.discoverDefaults": "默认时段 / 语言",
+  "settings.githubTokenSave": "保存",
+  "settings.githubTokenClear": "清空",
+  "settings.githubTokenCreate": "创建 Token",
 
   "cleaner.profile": "书签画像",
   "cleaner.total": "书签总数",
@@ -172,6 +217,7 @@ const en: Dict = {
   "tabs.compare": "Compare",
   "tabs.backup": "Backup",
   "tabs.settings": "Settings",
+  "tabs.discover": "Discover",
 
   "common.search": "Search",
   "common.cancel": "Cancel",
@@ -193,12 +239,57 @@ const en: Dict = {
 
   "dash.folders": "Bookmark folders",
   "dash.all200": "All (first 200)",
-  "dash.searchPlaceholder":
-    "Search bookmarks, or press Enter to search the web…",
+  "dash.searchPlaceholder": "Search bookmarks or the web…",
   "dash.empty":
     "No matching bookmarks. Press Enter to search with your engine.",
   "dash.dropHint": "Drop here",
   "dash.dragHint": "Hold a card and drag to reorder",
+  "dash.kbdHint": "Ctrl + Enter to open across all engines",
+  "dash.searchClear": "Clear",
+  "dash.matchCount": (n: string) =>
+    `${n} bookmark matches · Enter to search the web`,
+  "dash.matchNone": "No bookmark matches · Enter to search the web",
+
+  "discover.title": "GitHub Trending",
+  "discover.subtitle":
+    "Uses GitHub Search: pick a time window (day / week / month / year) for when the repo was first created, then sort by stars (not the same as github.com/trending).",
+  "discover.trendingExplainer":
+    "Repos first created within the window, sorted by stars (desc).",
+  "discover.widget.hint": (range: string, days: string) =>
+    `「${range}」: created in the last ${days} days, sorted by stars.`,
+  "discover.range.daily": "Today",
+  "discover.range.weekly": "This week",
+  "discover.range.monthly": "This month",
+  "discover.range.yearly": "This year",
+  "discover.language.all": "All languages",
+  "discover.refresh": "Refresh",
+  "discover.loading": "Loading trending repos…",
+  "discover.empty": "No results. Try different filters.",
+  "discover.error": "Failed to load",
+  "discover.stars": (n: string) => `${n} Stars`,
+  "discover.forks": (n: string) => `${n} Forks`,
+  "discover.addBookmark": "Bookmark",
+  "discover.addedBookmark": "Bookmarked",
+  "discover.copy": "Copy link",
+  "discover.open": "Open",
+  "discover.more": "View all",
+  "discover.widget.title": "GitHub Trending",
+  "discover.widget.viewAll": "View all →",
+  "discover.injectAi": "Inject current trending",
+  "discover.injectedAi": (n: string) =>
+    `Injected ${n} trending repos into AI chat.`,
+  "discover.updated": (t: string) => `Updated ${t}`,
+  "discover.needToken":
+    "No GitHub Token set. Unauthenticated: 60 req/h. Open Settings to add one.",
+  "discover.cacheHit": "From cache",
+  "settings.discover": "Discover / GitHub Trending",
+  "settings.githubToken": "GitHub Personal Access Token",
+  "settings.githubTokenHint":
+    "Optional. Needs only public_repo scope. Raises API quota from 60/h to 5000/h.",
+  "settings.discoverDefaults": "Default range / language",
+  "settings.githubTokenSave": "Save",
+  "settings.githubTokenClear": "Clear",
+  "settings.githubTokenCreate": "Create token",
 
   "cleaner.profile": "Profile",
   "cleaner.total": "Bookmarks",
