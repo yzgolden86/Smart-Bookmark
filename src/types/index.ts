@@ -82,11 +82,16 @@ export interface Settings {
   githubToken?: string;
   /** Discover 页默认时段 */
   discoverDefaultRange?: TrendingRange;
+  /** Discover 页默认模式（created=新建仓库, hottest=近期活跃仓库） */
+  discoverDefaultMode?: TrendingMode;
   /** Discover 页默认语言（空=全部） */
   discoverDefaultLanguage?: string;
 }
 
 export type TrendingRange = "daily" | "weekly" | "monthly" | "yearly";
+
+/** 热门模式：created = 时间窗内新建的仓库；hottest = 时间窗内活跃的仓库 */
+export type TrendingMode = "created" | "hottest";
 
 export interface TrendingRepo {
   id: number;
@@ -102,6 +107,14 @@ export interface TrendingRepo {
   topics: string[];
   createdAt: string;
   pushedAt: string;
+  /** 平均每天新增 stars（= stars / 自创建以来的天数） */
+  starsPerDay: number;
+  /** 距上次本地快照以来的 star 变化量，仅当存在历史快照时存在 */
+  starsDelta?: {
+    stars: number;
+    /** 距上次快照的毫秒数 */
+    sinceMs: number;
+  };
 }
 
 export interface AiMessage {

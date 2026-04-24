@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pinnedFolderIds: [],
   githubToken: "",
   discoverDefaultRange: "weekly",
+  discoverDefaultMode: "created",
   discoverDefaultLanguage: "",
 };
 

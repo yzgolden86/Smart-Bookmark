@@ -12,7 +12,7 @@ import {
   findFolder,
   moveBookmark,
 } from "@/lib/bookmarks";
-import type { BookmarkNode, FlatBookmark, Settings, TrendingRange } from "@/types";
+import type { BookmarkNode, FlatBookmark, Settings, TrendingMode, TrendingRange } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ import {
   X,
   Flame,
   Clock,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import TrendingPanel from "@/components/TrendingPanel";
 import { rangeToWindowDays } from "@/lib/github";
@@ -90,6 +92,9 @@ export default function Dashboard({
   const [searchFocused, setSearchFocused] = useState(false);
   const [widgetRange, setWidgetRange] = useState<TrendingRange>(
     settings.discoverDefaultRange ?? "weekly",
+  );
+  const [widgetMode, setWidgetMode] = useState<TrendingMode>(
+    settings.discoverDefaultMode ?? "created",
   );
   const trendingSectionRef = useRef<HTMLElement>(null);
   const [trendingHeight, setTrendingHeight] = useState<number | null>(null);
@@ -719,6 +724,34 @@ export default function Dashboard({
                 <div
                   className="inline-flex items-center gap-0.5 rounded-lg border bg-card/80 p-0.5 text-[11px]"
                   role="tablist"
+                  aria-label="Mode"
+                >
+                  {(["created", "hottest"] as TrendingMode[]).map((m) => {
+                    const Icon = m === "created" ? Sparkles : TrendingUp;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        role="tab"
+                        aria-selected={widgetMode === m}
+                        onClick={() => setWidgetMode(m)}
+                        title={t(`discover.mode.${m}.hint`)}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium transition",
+                          widgetMode === m
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        )}
+                      >
+                        <Icon className="h-3 w-3" />
+                        {t(`discover.mode.${m}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  className="inline-flex items-center gap-0.5 rounded-lg border bg-card/80 p-0.5 text-[11px]"
+                  role="tablist"
                   aria-label={t("discover.widget.title")}
                 >
                   {(["daily", "weekly", "monthly", "yearly"] as TrendingRange[]).map(
@@ -767,7 +800,8 @@ export default function Dashboard({
                   "discover.widget.hint",
                   t(`discover.range.${widgetRange}`),
                   String(rangeToWindowDays(widgetRange)),
-                )}
+                )}{" "}
+                {t(`discover.mode.${widgetMode}.hint`)}
               </p>
               <TrendingPanel
                 settings={settings}
@@ -776,6 +810,8 @@ export default function Dashboard({
                 hideControls
                 range={widgetRange}
                 onRangeChange={setWidgetRange}
+                mode={widgetMode}
+                onModeChange={setWidgetMode}
               />
             </section>
           </div>

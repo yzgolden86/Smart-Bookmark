@@ -52,12 +52,14 @@ export default function AiPanel({ settings }: { settings: Settings }) {
     try {
       const data = await fetchTrending({
         range: settings.discoverDefaultRange ?? "weekly",
+        mode: settings.discoverDefaultMode ?? "created",
         language: settings.discoverDefaultLanguage || undefined,
         limit: 20,
         token: settings.githubToken || undefined,
       });
       const md = trendingToMarkdown(data, {
         range: settings.discoverDefaultRange ?? "weekly",
+        mode: settings.discoverDefaultMode ?? "created",
         language: settings.discoverDefaultLanguage,
       });
       const now = Date.now();

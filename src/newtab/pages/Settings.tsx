@@ -10,7 +10,7 @@ import { testAi } from "@/lib/ai";
 import { BUILTIN_ENGINES, faviconFor } from "@/lib/engines";
 import { CheckCircle2, XCircle, Loader2, Flame, ExternalLink } from "lucide-react";
 import { COMMON_LANGUAGES, clearTrendingCache } from "@/lib/github";
-import type { TrendingRange } from "@/types";
+import type { TrendingMode, TrendingRange } from "@/types";
 import { toast } from "@/components/ui/toast";
 
 const ENGINE_LIST = BUILTIN_ENGINES.slice(0, 10);
@@ -406,6 +406,28 @@ export default function SettingsPage() {
           </Row>
           <Row label={t("settings.discoverDefaults")}>
             <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  ["created", t("discover.mode.created")],
+                  ["hottest", t("discover.mode.hottest")],
+                ] as const
+              ).map(([v, label]) => (
+                <Button
+                  key={v}
+                  size="sm"
+                  variant={
+                    (s.discoverDefaultMode ?? "created") === v
+                      ? "default"
+                      : "outline"
+                  }
+                  onClick={() =>
+                    update({ discoverDefaultMode: v as TrendingMode })
+                  }
+                >
+                  {label}
+                </Button>
+              ))}
+              <div className="mx-2 h-5 w-px bg-border" />
               {(
                 [
                   ["daily", t("discover.range.daily")],

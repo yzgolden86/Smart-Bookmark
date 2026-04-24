@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Flame, RefreshCw, AlertTriangle, ChevronDown } from "lucide-react";
+import { Flame, RefreshCw, AlertTriangle, ChevronDown, Sparkles, TrendingUp } from "lucide-react";
 import RepoCard from "@/components/RepoCard";
 import { fetchTrending, COMMON_LANGUAGES, rangeToWindowDays } from "@/lib/github";
-import type { Settings, TrendingRange, TrendingRepo } from "@/types";
+import type { Settings, TrendingMode, TrendingRange, TrendingRepo } from "@/types";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+
+const MODES: TrendingMode[] = ["created", "hottest"];
 
 const RANGES: TrendingRange[] = ["daily", "weekly", "monthly", "yearly"];
 
@@ -21,10 +23,14 @@ export interface TrendingPanelProps {
   /** 受控的时段。传入后忽略 initialRange 并走受控模式。 */
   range?: TrendingRange;
   onRangeChange?: (r: TrendingRange) => void;
+  /** 受控的模式。传入后忽略 initialMode 并走受控模式。 */
+  mode?: TrendingMode;
+  onModeChange?: (m: TrendingMode) => void;
   /** 暴露给外部（比如 AI 注入按钮）读取当前数据 */
   onDataChange?: (data: TrendingRepo[], meta: {
     range: TrendingRange;
     language: string;
+    mode: TrendingMode;
   }) => void;
   /** 隐藏头部控件（仅在 widget 场景想更紧凑时用） */
   hideControls?: boolean;
@@ -42,6 +48,8 @@ export default function TrendingPanel({
   initialLanguage,
   range: rangeProp,
   onRangeChange,
+  mode: modeProp,
+  onModeChange,
   onDataChange,
   hideControls = false,
   headerExtra,
@@ -55,6 +63,14 @@ export default function TrendingPanel({
   const setRange = (r: TrendingRange) => {
     if (onRangeChange) onRangeChange(r);
     if (rangeProp == null) setRangeState(r);
+  };
+  const [modeState, setModeState] = useState<TrendingMode>(
+    settings.discoverDefaultMode ?? "created",
+  );
+  const mode = modeProp ?? modeState;
+  const setMode = (m: TrendingMode) => {
+    if (onModeChange) onModeChange(m);
+    if (modeProp == null) setModeState(m);
   };
   const [language, setLanguage] = useState<string>(
     initialLanguage ?? settings.discoverDefaultLanguage ?? "",
@@ -75,6 +91,7 @@ export default function TrendingPanel({
       try {
         const data = await fetchTrending({
           range,
+          mode,
           language: language || undefined,
           limit,
           token: settings.githubToken || undefined,
@@ -83,7 +100,7 @@ export default function TrendingPanel({
         });
         setList(data);
         setUpdatedAt(Date.now());
-        onDataChange?.(data, { range, language });
+        onDataChange?.(data, { range, language, mode });
       } catch (err) {
         if ((err as Error)?.name === "AbortError") return;
         setError((err as Error)?.message ?? String(err));
@@ -91,7 +108,7 @@ export default function TrendingPanel({
         if (!ctrl.signal.aborted) setLoading(false);
       }
     },
-    [range, language, limit, settings.githubToken, onDataChange],
+    [range, mode, language, limit, settings.githubToken, onDataChange],
   );
 
   useEffect(() => {
@@ -115,6 +132,31 @@ export default function TrendingPanel({
     <div className={cn("space-y-3", className)}>
       {!hideControls && (
         <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-0.5 rounded-lg border bg-card p-0.5 text-xs"
+            role="tablist" aria-label="Mode">
+            {MODES.map((m) => {
+              const Icon = m === "created" ? Sparkles : TrendingUp;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => setMode(m)}
+                  title={t(`discover.mode.${m}.hint`)}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium transition",
+                    mode === m
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  {t(`discover.mode.${m}`)}
+                </button>
+              );
+            })}
+          </div>
           <div className="inline-flex items-center gap-1 rounded-lg border bg-card p-0.5 text-xs">
             {RANGES.map((r) => (
               <button
@@ -167,7 +209,7 @@ export default function TrendingPanel({
             t(`discover.range.${range}`),
             String(rangeToWindowDays(range)),
           )}{" "}
-          {t("discover.trendingExplainer")}
+          {t(`discover.mode.${mode}.hint`)}
         </p>
       )}
 
@@ -215,10 +257,11 @@ export default function TrendingPanel({
               loading && "pointer-events-none opacity-45",
             )}
           >
-            {list.map((r) => (
+            {list.map((r, i) => (
               <RepoCard
                 key={r.id}
                 repo={r}
+                rank={i + 1}
                 compact={compact}
                 bookmarkFolderId={settings.rootFolderId}
               />

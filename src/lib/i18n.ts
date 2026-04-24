@@ -49,11 +49,13 @@ const zh: Dict = {
 
   "discover.title": "GitHub 热门",
   "discover.subtitle":
-    "基于 GitHub Search：在下方选择日 / 周 / 月 / 年 设定「仓库创建时间」窗口，再按 star 数排序（与 GitHub 官网 Trending 页算法不同）。",
-  "discover.trendingExplainer":
-    "同一套规则：时间窗内新建的公开仓库，按 star 降序。",
+    "基于 GitHub Search：选择「新创建」或「最热门」模式，再按日 / 周 / 月 / 年 设定时间窗口，按创建以来 star 均速排序。",
+  "discover.mode.created": "新创建",
+  "discover.mode.hottest": "最热门",
+  "discover.mode.created.hint": "时间窗内新建的仓库，按创建以来 star 均速排序",
+  "discover.mode.hottest.hint": "时间窗内活跃的仓库，按创建以来 star 均速排序",
   "discover.widget.hint": (range: string, days: string) =>
-    `已选「${range}」：近 ${days} 天内创建的仓库，按 star 数排序。`,
+    `已选「${range}」：近 ${days} 天时间窗。`,
   "discover.range.daily": "今日",
   "discover.range.weekly": "本周",
   "discover.range.monthly": "本月",
@@ -77,6 +79,12 @@ const zh: Dict = {
   "discover.updated": (t: string) => `更新于 ${t}`,
   "discover.needToken": "未配置 GitHub Token，未认证请求 60 次/小时。前往设置填入。",
   "discover.cacheHit": "来自缓存",
+  "discover.rank.hint": (n: string) => `当前排序第 ${n} 位`,
+  "discover.velocity": (n: string) => `均 ${n} ★/天`,
+  "discover.velocity.hint":
+    "创建以来平均每天获得的 stars，不是所选时间窗内的真实新增。",
+  "discover.gained.hint": (n: string, period: string) =>
+    `距上次刷新 ${period}，新增 ${n} stars。`,
   "settings.discover": "发现 / GitHub 热门",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
@@ -252,11 +260,13 @@ const en: Dict = {
 
   "discover.title": "GitHub Trending",
   "discover.subtitle":
-    "Uses GitHub Search: pick a time window (day / week / month / year) for when the repo was first created, then sort by stars (not the same as github.com/trending).",
-  "discover.trendingExplainer":
-    "Repos first created within the window, sorted by stars (desc).",
+    "Uses GitHub Search: choose \"Newly Created\" or \"Hottest\" mode, pick a time window, then sort by average stars per day since creation.",
+  "discover.mode.created": "Newly Created",
+  "discover.mode.hottest": "Hottest",
+  "discover.mode.created.hint": "Repos created within the time window, sorted by average stars per day since creation",
+  "discover.mode.hottest.hint": "Active repos within the time window, sorted by average stars per day since creation",
   "discover.widget.hint": (range: string, days: string) =>
-    `「${range}」: created in the last ${days} days, sorted by stars.`,
+    `「${range}」: last ${days} days window.`,
   "discover.range.daily": "Today",
   "discover.range.weekly": "This week",
   "discover.range.monthly": "This month",
@@ -282,6 +292,12 @@ const en: Dict = {
   "discover.needToken":
     "No GitHub Token set. Unauthenticated: 60 req/h. Open Settings to add one.",
   "discover.cacheHit": "From cache",
+  "discover.rank.hint": (n: string) => `Current rank #${n}`,
+  "discover.velocity": (n: string) => `avg ${n} ★/day`,
+  "discover.velocity.hint":
+    "Average stars gained per day since the repo was created, not the actual gain inside the selected window.",
+  "discover.gained.hint": (n: string, period: string) =>
+    `+${n} stars since last refresh (${period} ago).`,
   "settings.discover": "Discover / GitHub Trending",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
