@@ -155,6 +155,11 @@ const zh: Dict = {
   "settings.themeAuto": "跟随系统",
   "settings.themeLight": "浅色",
   "settings.themeDark": "深色",
+  "settings.themePreset": "设计主题",
+  "settings.themePresetHint":
+    "每个主题是一套协调的配色、圆角与字体。切换后整站（看板/侧栏/弹窗）统一生效。",
+  "settings.accentDisabledByPreset":
+    "当前已启用设计主题，主题色由主题控制；切回「默认」主题后生效。",
   "settings.accent": "主题色",
   "settings.accentLinear": "Linear 紫",
   "settings.accentIndigo": "靛青",
@@ -370,6 +375,11 @@ const en: Dict = {
   "settings.themeAuto": "Auto",
   "settings.themeLight": "Light",
   "settings.themeDark": "Dark",
+  "settings.themePreset": "Design theme",
+  "settings.themePresetHint":
+    "Each theme is a coordinated palette, radius and typography set. Applies across dashboard, side panel and popup.",
+  "settings.accentDisabledByPreset":
+    "A design theme is active — the primary color is managed by the theme. Switch to Default to use accent presets.",
   "settings.accent": "Accent color",
   "settings.accentLinear": "Linear",
   "settings.accentIndigo": "Indigo",

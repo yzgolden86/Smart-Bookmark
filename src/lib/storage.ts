@@ -5,6 +5,7 @@ const KEY = "smart-bookmark::settings";
 export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
   accentPreset: "linear",
+  themePreset: "default",
   rootFolderId: undefined,
   wallpaper: undefined,
   searchEngine: "google",

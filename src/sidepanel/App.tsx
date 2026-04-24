@@ -13,6 +13,7 @@ import { faviconOf, hostnameOf, cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { getSettings, onSettingsChange, setSettings } from "@/lib/storage";
 import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 import EngineSwitcher from "@/components/EngineSwitcher";
 import { findEngine } from "@/lib/engines";
 
@@ -152,6 +153,7 @@ export default function SidePanel() {
         <div className="mb-3 flex items-center gap-2">
           <Bookmark className="h-4 w-4 text-primary" />
           <span className="flex-1 font-semibold">{t("side.title")}</span>
+          <ThemeSwitcher variant="icon" />
           <ThemeToggle />
         </div>
         <form onSubmit={onSubmitSearch} className="flex items-center gap-1 rounded-full border bg-card pl-1 pr-1">

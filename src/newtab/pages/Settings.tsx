@@ -4,14 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { getSettings, setSettings } from "@/lib/storage";
-import type { AccentPreset, Settings } from "@/types";
+import type { AccentPreset, Settings, ThemePreset } from "@/types";
 import { useT } from "@/lib/i18n";
 import { testAi } from "@/lib/ai";
 import { BUILTIN_ENGINES, faviconFor } from "@/lib/engines";
-import { CheckCircle2, XCircle, Loader2, Flame, ExternalLink } from "lucide-react";
+import { Check, CheckCircle2, XCircle, Loader2, Flame, ExternalLink } from "lucide-react";
 import { COMMON_LANGUAGES, clearTrendingCache } from "@/lib/github";
 import type { TrendingMode, TrendingRange } from "@/types";
 import { toast } from "@/components/ui/toast";
+import { THEME_PRESETS } from "@/lib/themePresets";
+import { cn } from "@/lib/utils";
 
 const ENGINE_LIST = BUILTIN_ENGINES.slice(0, 10);
 
@@ -78,6 +80,60 @@ export default function SettingsPage() {
               ))}
             </div>
           </Row>
+          <Row label={t("settings.themePreset")}>
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {THEME_PRESETS.map((p) => {
+                  const active = (s.themePreset ?? "default") === p.key;
+                  const isDark =
+                    typeof document !== "undefined" &&
+                    document.documentElement.classList.contains("dark");
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() =>
+                        update({ themePreset: p.key as ThemePreset })
+                      }
+                      className={cn(
+                        "group relative flex items-start gap-3 rounded-xl border bg-card p-3 text-left transition hover:border-primary/50 hover:shadow-sm",
+                        active && "border-primary ring-2 ring-primary/20",
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className="mt-0.5 h-8 w-8 shrink-0 rounded-lg ring-1 ring-black/10 dark:ring-white/10"
+                        style={{
+                          backgroundColor: isDark
+                            ? p.swatchDark
+                            : p.swatchLight,
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-sm font-medium">
+                            {p.shortLabel}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                            {p.label}
+                          </span>
+                        </div>
+                        <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                          {p.description}
+                        </div>
+                      </div>
+                      {active && (
+                        <Check className="absolute right-2 top-2 h-4 w-4 text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {t("settings.themePresetHint")}
+              </p>
+            </div>
+          </Row>
           <Row label={t("settings.accent")}>
             <div className="flex flex-wrap gap-2">
               {(
@@ -107,6 +163,11 @@ export default function SettingsPage() {
                 </Button>
               ))}
             </div>
+            {(s.themePreset ?? "default") !== "default" && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                {t("settings.accentDisabledByPreset")}
+              </p>
+            )}
           </Row>
           <Row label={t("settings.density")}>
             <div className="flex gap-2">

@@ -52,6 +52,26 @@ export type AccentPreset =
   | "cyan"
   | "orange";
 
+/**
+ * 设计主题预设（theme preset）。
+ *
+ * 叠加在 light/dark 模式之上，每个预设是一套协调的
+ * 令牌（主色 / 圆角 / 字体 / 表面色）。与 {@link AccentPreset}
+ * 并存：选择非 `default` 的 themePreset 时会覆盖 accentPreset
+ * 的主色。详见 `src/lib/themePresets.ts`。
+ */
+export type ThemePreset =
+  | "default"
+  | "claude"
+  | "linear"
+  | "apple"
+  | "stripe"
+  | "ibm"
+  | "meta"
+  | "vercel"
+  | "sunset"
+  | "forest";
+
 export interface CustomEngine {
   id: string;
   name: string;
@@ -62,6 +82,8 @@ export interface CustomEngine {
 export interface Settings {
   theme: "system" | "light" | "dark";
   accentPreset: AccentPreset;
+  /** 设计主题预设。非 `default` 时会覆盖 accentPreset 的主色。 */
+  themePreset: ThemePreset;
   rootFolderId?: string;
   wallpaper?: string;
   searchEngine: string;
