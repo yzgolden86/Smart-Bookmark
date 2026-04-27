@@ -5,6 +5,7 @@ import {
   Bookmark,
   Copy,
   TrendingUp,
+  Activity,
 } from "lucide-react";
 import type { TrendingRepo } from "@/types";
 import { cn } from "@/lib/utils";
@@ -12,12 +13,25 @@ import { langColor } from "@/lib/github";
 import { useT } from "@/lib/i18n";
 import { toast } from "@/components/ui/toast";
 
+/**
+ * 主指标口径：控制卡片左上那个著色 chip 表示“何种速度”。
+ * - `velocity-since-creation`：仓库创建以来均速（starsPerDay）
+ * - `recent-growth`：近期快照增长速度（recentVelocity）
+ * - `total-stars`：不展示速度 chip，让总 star 成为主角
+ */
+export type RepoCardMetric =
+  | "velocity-since-creation"
+  | "recent-growth"
+  | "total-stars";
+
 interface Props {
   repo: TrendingRepo;
   compact?: boolean;
   bookmarkFolderId?: string;
   /** 在 trending 列表中的排名（1-based），传入后展示徽章。 */
   rank?: number;
+  /** 主指标。默认 `velocity-since-creation`，保持原本行为。 */
+  primaryMetric?: RepoCardMetric;
 }
 
 function formatK(n: number): string {
@@ -62,7 +76,13 @@ function rankChipClass(rank: number): string {
   return "bg-muted text-muted-foreground ring-border";
 }
 
-export default function RepoCard({ repo, compact, bookmarkFolderId, rank }: Props) {
+export default function RepoCard({
+  repo,
+  compact,
+  bookmarkFolderId,
+  rank,
+  primaryMetric = "velocity-since-creation",
+}: Props) {
   const t = useT();
   const color = langColor(repo.language);
 
@@ -195,14 +215,47 @@ export default function RepoCard({ repo, compact, bookmarkFolderId, rank }: Prop
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] text-muted-foreground">
-        <span
-          className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary ring-1 ring-primary/20"
-          title={t("discover.velocity.hint")}
-          aria-label={t("discover.velocity.hint")}
-        >
-          <TrendingUp className="h-3 w-3" />
-          {t("discover.velocity", formatVelocity(repo.starsPerDay))}
-        </span>
+        {primaryMetric === "velocity-since-creation" && (
+          <span
+            className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary ring-1 ring-primary/20"
+            title={t("discover.velocity.hint")}
+            aria-label={t("discover.velocity.hint")}
+          >
+            <TrendingUp className="h-3 w-3" />
+            {t("discover.velocity", formatVelocity(repo.starsPerDay))}
+          </span>
+        )}
+        {primaryMetric === "recent-growth" &&
+          (typeof repo.recentVelocity === "number" ? (
+            <span
+              className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-1.5 py-0.5 font-semibold text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300"
+              title={t("discover.recentVelocity.hint")}
+              aria-label={t("discover.recentVelocity.hint")}
+            >
+              <Activity className="h-3 w-3" />
+              {t("discover.recentVelocity", formatVelocity(repo.recentVelocity))}
+            </span>
+          ) : (
+            // 未拿到快照：退到创建以来均速 chip，加“还需一次刷新”提示
+            <span
+              className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground ring-1 ring-border"
+              title={t("discover.recentVelocity.pending")}
+              aria-label={t("discover.recentVelocity.pending")}
+            >
+              <Activity className="h-3 w-3" />
+              {t("discover.velocity", formatVelocity(repo.starsPerDay))}
+            </span>
+          ))}
+        {primaryMetric === "total-stars" && (
+          <span
+            className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary ring-1 ring-primary/20"
+            title={t("discover.totalStars.hint")}
+            aria-label={t("discover.totalStars.hint")}
+          >
+            <Star className="h-3 w-3 fill-current" />
+            {formatK(repo.stars)}
+          </span>
+        )}
         {repo.starsDelta && repo.starsDelta.stars > 0 && (
           <span
             className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400"
@@ -219,9 +272,11 @@ export default function RepoCard({ repo, compact, bookmarkFolderId, rank }: Prop
             </span>
           </span>
         )}
-        <span className="inline-flex items-center gap-1">
-          <Star className="h-3 w-3" /> {formatK(repo.stars)}
-        </span>
+        {primaryMetric !== "total-stars" && (
+          <span className="inline-flex items-center gap-1">
+            <Star className="h-3 w-3" /> {formatK(repo.stars)}
+          </span>
+        )}
         <span className="inline-flex items-center gap-1">
           <GitFork className="h-3 w-3" /> {formatK(repo.forks)}
         </span>

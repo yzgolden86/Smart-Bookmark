@@ -1,4 +1,9 @@
-import type { TrendingMode, TrendingRange, TrendingRepo } from "@/types";
+import type {
+  TrendingMode,
+  TrendingRange,
+  TrendingRepo,
+  TrendingSort,
+} from "@/types";
 
 const CACHE_KEY = "smart-bookmark::github-trending-cache";
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -88,8 +93,13 @@ export function rangeToSinceDate(range: TrendingRange, now = new Date()): string
 
 export interface FetchTrendingOptions {
   range: TrendingRange;
-  /** 热门模式：created=时间窗内新建，hottest=时间窗内活跃仓库；均按创建以来 star 均速排序 */
+  /** 热门模式：created=时间窗内新建，hottest=时间窗内活跃仓库 */
   mode?: TrendingMode;
+  /**
+   * 客户端排序口径。`auto` 时根据 mode 自适应：
+   * created → velocity-since-creation；hottest → total-stars。
+   */
+  sort?: TrendingSort;
   /** 为空即全部语言。使用 GitHub `language:xxx` 限定词。 */
   language?: string;
   /** 返回数量上限，默认 30，最大 100。 */
@@ -103,13 +113,26 @@ export interface FetchTrendingOptions {
 
 /**
  * 缓存 schema 版本前缀。当 TrendingRepo 结构变化时升版本，
- * 以自动无效化老版本的缓存条目。v3: 统一按 starsPerDay 排序。
+ * 以自动无效化老版本的缓存条目。
+ *
+ * - v3: 统一按 starsPerDay 排序
+ * - v4: 排序参数化（auto/velocity-since-creation/recent-growth/total-stars），
+ *       hottest 模式候选池收紧到 created>5y，
+ *       新增 recentVelocity 字段（基于本地快照）
  */
-const CACHE_SCHEMA = "v3";
+const CACHE_SCHEMA = "v4";
 
 function buildCacheKey(o: FetchTrendingOptions): string {
+  // 注意：sort 不进入缓存 key —— sort 只决定客户端排序，
+  // 候选池本身（mode/range/language/limit）才决定服务端拉取的内容。
   return `${CACHE_SCHEMA}::${o.mode ?? "created"}::${o.range}::${(o.language ?? "").toLowerCase()}::${o.limit ?? 30}`;
 }
+
+/**
+ * Hottest 模式候选池的最大年龄（年）。把活跃但超老的项目（如 React 12 年）
+ * 排除掉，避免它们用极小的 starsPerDay 把列表稀释。
+ */
+const HOTTEST_MAX_AGE_YEARS = 5;
 
 /** 兼容旧版缓存：若缺少 starsPerDay，从 stars + createdAt 现算补上。 */
 function rehydrateRepo(r: TrendingRepo): TrendingRepo {
@@ -127,32 +150,34 @@ export async function fetchTrending(
   opts: FetchTrendingOptions,
 ): Promise<TrendingRepo[]> {
   const limit = Math.min(Math.max(opts.limit ?? 30, 1), 100);
+  const mode: TrendingMode = opts.mode ?? "created";
+  const sort = resolveSort(opts.sort, mode);
   const key = buildCacheKey({ ...opts, limit });
 
   if (!opts.force) {
     const cache = await readCache();
     const hit = cache[key];
     if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-      return hit.data.map(rehydrateRepo);
+      // 缓存命中：候选池没变，仅用本地最新快照刷新 recentVelocity，
+      // 然后在本地按用户当前选择的 sort 重排、切片即可。
+      // 注意：缓存的是完整候选池（≤ candidateLimit），而非 sliced 后的列表，
+      // 这样切换 sort 时不会丢失边缘候选项。
+      const fresh = hit.data.map(rehydrateRepo);
+      await applyDeltaFromSnapshots(fresh);
+      sortRepos(fresh, sort);
+      return fresh.slice(0, limit);
     }
   }
 
   const since = rangeToSinceDate(opts.range);
-  const mode = opts.mode ?? "created";
   const candidateLimit = Math.min(100, Math.max(limit, 50, limit * 5));
-  const qs: string[] = [];
-  if (mode === "created") {
-    // 时间窗内新建的仓库，先用总 star 拉候选，再按创建以来 star 均速重排。
-    qs.push(`created:>${since}`, "stars:>5");
-  } else {
-    // 时间窗内有推送的仓库（活跃仓库），先拉高 star 候选，再按创建以来 star 均速重排。
-    qs.push(`pushed:>${since}`, "stars:>50");
-  }
-  if (opts.language?.trim()) {
-    qs.push(`language:${encodeQueryToken(opts.language.trim())}`);
-  }
+  const qs = buildCandidateQuery({
+    mode,
+    since,
+    language: opts.language,
+  });
   const url = new URL("https://api.github.com/search/repositories");
-  url.searchParams.set("q", qs.join(" "));
+  url.searchParams.set("q", qs);
   url.searchParams.set("sort", "stars");
   url.searchParams.set("order", "desc");
   url.searchParams.set("per_page", String(candidateLimit));
@@ -175,30 +200,112 @@ export async function fetchTrending(
     throw new Error(`GitHub ${res.status}: ${snippet}`);
   }
   const json = (await res.json()) as { items?: RawGithubRepo[] };
-  let data: TrendingRepo[] = (json.items ?? []).map(normalizeRepo);
+  const pool: TrendingRepo[] = (json.items ?? []).map(normalizeRepo);
 
-  // 统一用卡片展示的速度指标排序，避免「排名第一但 ★/天 很低」的口径错位。
-  data.sort(compareByStarsPerDay);
-  data = data.slice(0, limit);
+  // 先 apply 快照差，把 recentVelocity 填进每条记录
+  await applyDeltaFromSnapshots(pool);
 
-  await applyDeltaFromSnapshots(data);
-
+  // 缓存写入完整候选池（不切片），让后续切换 sort 时仍能看到边缘候选项。
   const cache = await readCache();
-  cache[key] = { at: Date.now(), data };
+  cache[key] = { at: Date.now(), data: pool };
   await writeCache(cache);
 
-  return data;
-}
-
-function compareByStarsPerDay(a: TrendingRepo, b: TrendingRepo): number {
-  const byVelocity = (b.starsPerDay ?? 0) - (a.starsPerDay ?? 0);
-  if (byVelocity !== 0) return byVelocity;
-  return b.stars - a.stars;
+  // 当前调用按用户的 sort 排序 + 切片返回
+  sortRepos(pool, sort);
+  return pool.slice(0, limit);
 }
 
 /**
- * 读取上一轮快照 → 为每个仓库计算 star 增量 → 更新并写回快照。
- * 仅对年龄 ≥ SNAPSHOT_MIN_AGE_MS 的快照显示 delta，避免刚刷新又刷新导致的 +0。
+ * 构造 GitHub Search API 的查询串。
+ *
+ * - created 模式：拉取「时间窗内新建的仓库」（`created:>since`），
+ *   分母（仓库年龄）天然受时间窗限制，starsPerDay 口径合理。
+ *
+ * - hottest 模式：拉取「时间窗内有推送、且年龄 ≤ 5 年」的活跃仓库，
+ *   通过 `created:>X` 排除超老项目（D 方案），避免巨型老仓库
+ *   用极小的 starsPerDay 稀释列表。
+ */
+function buildCandidateQuery(o: {
+  mode: TrendingMode;
+  since: string;
+  language?: string;
+}): string {
+  const qs: string[] = [];
+  if (o.mode === "created") {
+    qs.push(`created:>${o.since}`, "stars:>5");
+  } else {
+    const oldestCreated = new Date(
+      Date.now() - HOTTEST_MAX_AGE_YEARS * 365 * 86_400_000,
+    )
+      .toISOString()
+      .slice(0, 10);
+    qs.push(
+      `pushed:>${o.since}`,
+      "stars:>50",
+      `created:>${oldestCreated}`,
+    );
+  }
+  if (o.language?.trim()) {
+    qs.push(`language:${encodeQueryToken(o.language.trim())}`);
+  }
+  return qs.join(" ");
+}
+
+/** 把 `auto` 解析成具体排序：created → 创建以来均速；hottest → 总 star。 */
+export function resolveSort(
+  sort: TrendingSort | undefined,
+  mode: TrendingMode,
+): Exclude<TrendingSort, "auto"> {
+  const s = sort ?? "auto";
+  if (s !== "auto") return s;
+  return mode === "hottest" ? "total-stars" : "velocity-since-creation";
+}
+
+/** 在本地按用户选择的口径排序（in-place）。 */
+export function sortRepos(
+  data: TrendingRepo[],
+  sort: Exclude<TrendingSort, "auto">,
+): void {
+  switch (sort) {
+    case "total-stars":
+      data.sort(
+        (a, b) =>
+          b.stars - a.stars ||
+          (b.starsPerDay ?? 0) - (a.starsPerDay ?? 0),
+      );
+      return;
+    case "recent-growth":
+      data.sort((a, b) => {
+        // 主键：recentVelocity（没快照的退到最后）
+        const av = a.recentVelocity ?? -1;
+        const bv = b.recentVelocity ?? -1;
+        if (bv !== av) return bv - av;
+        // 次键：starsPerDay（兜底，让首次刷新也有合理顺序）
+        const apd = a.starsPerDay ?? 0;
+        const bpd = b.starsPerDay ?? 0;
+        if (bpd !== apd) return bpd - apd;
+        return b.stars - a.stars;
+      });
+      return;
+    case "velocity-since-creation":
+    default:
+      data.sort(
+        (a, b) =>
+          (b.starsPerDay ?? 0) - (a.starsPerDay ?? 0) ||
+          b.stars - a.stars,
+      );
+      return;
+  }
+}
+
+/**
+ * 读取上一轮快照 → 为每个仓库计算 star 增量与近期速度 → 更新并写回快照。
+ *
+ * 同时填充：
+ * - `starsDelta`：自上次快照以来的 star 数变化（用于卡片角标）
+ * - `recentVelocity`：自上次快照以来的 ★/天（用于 recent-growth 排序）
+ *
+ * 仅对年龄 ≥ SNAPSHOT_MIN_AGE_MS 的快照启用，避免刚刷新又刷新导致 +0/无穷大。
  */
 async function applyDeltaFromSnapshots(list: TrendingRepo[]): Promise<void> {
   const snapshots = await readSnapshots();
@@ -210,8 +317,15 @@ async function applyDeltaFromSnapshots(list: TrendingRepo[]): Promise<void> {
     const prev = snapshots[key];
     if (prev && now - prev.at >= SNAPSHOT_MIN_AGE_MS) {
       const delta = repo.stars - prev.stars;
+      const sinceMs = now - prev.at;
+      const sinceDays = sinceMs / 86_400_000;
+      // recentVelocity 在 delta=0 时也要给（=0），这样仍能参与排序，
+      // 让没有近期增长的项目自然沉到底部。负数（取消 star）按 0 处理。
+      if (sinceDays > 0) {
+        repo.recentVelocity = Math.max(0, delta) / sinceDays;
+      }
       if (delta > 0) {
-        repo.starsDelta = { stars: delta, sinceMs: now - prev.at };
+        repo.starsDelta = { stars: delta, sinceMs };
       }
     }
     next[key] = { stars: repo.stars, at: now };
@@ -223,6 +337,11 @@ async function applyDeltaFromSnapshots(list: TrendingRepo[]): Promise<void> {
   }
 
   await writeSnapshots(next);
+}
+
+/** 检查给定列表中是否已有任何项填充了 recentVelocity（即本地有快照可用）。 */
+export function hasRecentVelocityData(list: TrendingRepo[]): boolean {
+  return list.some((r) => typeof r.recentVelocity === "number");
 }
 
 export async function clearTrendingCache(): Promise<void> {

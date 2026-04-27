@@ -10,7 +10,7 @@ import { testAi } from "@/lib/ai";
 import { BUILTIN_ENGINES, faviconFor } from "@/lib/engines";
 import { Check, CheckCircle2, XCircle, Loader2, Flame, ExternalLink } from "lucide-react";
 import { COMMON_LANGUAGES, clearTrendingCache } from "@/lib/github";
-import type { TrendingMode, TrendingRange } from "@/types";
+import type { TrendingMode, TrendingRange, TrendingSort } from "@/types";
 import { toast } from "@/components/ui/toast";
 import { THEME_PRESETS } from "@/lib/themePresets";
 import { cn } from "@/lib/utils";
@@ -527,6 +527,42 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
+            </div>
+          </Row>
+          <Row label={t("settings.discoverSort")}>
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                {(
+                  [
+                    ["auto", t("discover.sort.auto")],
+                    [
+                      "velocity-since-creation",
+                      t("discover.sort.velocity-since-creation"),
+                    ],
+                    ["recent-growth", t("discover.sort.recent-growth")],
+                    ["total-stars", t("discover.sort.total-stars")],
+                  ] as const
+                ).map(([v, label]) => (
+                  <Button
+                    key={v}
+                    size="sm"
+                    variant={
+                      (s.discoverDefaultSort ?? "auto") === v
+                        ? "default"
+                        : "outline"
+                    }
+                    onClick={() =>
+                      update({ discoverDefaultSort: v as TrendingSort })
+                    }
+                    title={t(`discover.sort.${v}.hint`)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {t("settings.discoverSortHint")}
+              </p>
             </div>
           </Row>
         </CardContent>

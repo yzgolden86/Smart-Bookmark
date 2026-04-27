@@ -1,14 +1,46 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Flame, RefreshCw, AlertTriangle, ChevronDown, Sparkles, TrendingUp } from "lucide-react";
+import {
+  Flame,
+  RefreshCw,
+  AlertTriangle,
+  ChevronDown,
+  Sparkles,
+  TrendingUp,
+  Star,
+  Activity,
+  Info,
+} from "lucide-react";
 import RepoCard from "@/components/RepoCard";
-import { fetchTrending, COMMON_LANGUAGES, rangeToWindowDays } from "@/lib/github";
-import type { Settings, TrendingMode, TrendingRange, TrendingRepo } from "@/types";
+import {
+  fetchTrending,
+  COMMON_LANGUAGES,
+  hasRecentVelocityData,
+  rangeToWindowDays,
+  resolveSort,
+} from "@/lib/github";
+import type {
+  Settings,
+  TrendingMode,
+  TrendingRange,
+  TrendingRepo,
+  TrendingSort,
+} from "@/types";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const MODES: TrendingMode[] = ["created", "hottest"];
 
 const RANGES: TrendingRange[] = ["daily", "weekly", "monthly", "yearly"];
+
+/**
+ * 可选的排序口径。`auto` 不需在 UI 里出现 —— 它只是设置默认值的中间态，
+ * UI 上用户始终看到三个具体口径中的一个亦可手动切换。
+ */
+const SORTS: Array<Exclude<TrendingSort, "auto">> = [
+  "velocity-since-creation",
+  "recent-growth",
+  "total-stars",
+];
 
 export interface TrendingPanelProps {
   settings: Settings;
@@ -75,6 +107,17 @@ export default function TrendingPanel({
   const [language, setLanguage] = useState<string>(
     initialLanguage ?? settings.discoverDefaultLanguage ?? "",
   );
+  /**
+   * 排序口径：默认跟随 settings.discoverDefaultSort（常为 auto），
+   * 由 resolveSort 根据 mode 展开成具体项；UI 上用户一旦手动点过，
+   * 存为 `userSort` 不再跟随 mode 变化。
+   */
+  const [userSort, setUserSort] = useState<
+    Exclude<TrendingSort, "auto"> | null
+  >(null);
+  const sort: Exclude<TrendingSort, "auto"> =
+    userSort ?? resolveSort(settings.discoverDefaultSort, mode);
+  const setSort = (s: Exclude<TrendingSort, "auto">) => setUserSort(s);
   const [list, setList] = useState<TrendingRepo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -92,6 +135,7 @@ export default function TrendingPanel({
         const data = await fetchTrending({
           range,
           mode,
+          sort,
           language: language || undefined,
           limit,
           token: settings.githubToken || undefined,
@@ -108,7 +152,7 @@ export default function TrendingPanel({
         if (!ctrl.signal.aborted) setLoading(false);
       }
     },
-    [range, mode, language, limit, settings.githubToken, onDataChange],
+    [range, mode, sort, language, limit, settings.githubToken, onDataChange],
   );
 
   useEffect(() => {
@@ -127,6 +171,13 @@ export default function TrendingPanel({
   const gridCls = compact
     ? "grid-cols-1 sm:grid-cols-2"
     : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+
+  // recent-growth 排序下，如果列表里没任何项拿到 recentVelocity（首次刷新/刚清空快照），
+  // 提示用户“这个排序需要再刷一次”。
+  const recentMissing =
+    sort === "recent-growth" &&
+    list.length > 0 &&
+    !hasRecentVelocityData(list);
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -174,6 +225,39 @@ export default function TrendingPanel({
               </button>
             ))}
           </div>
+          <div
+            className="inline-flex items-center gap-0.5 rounded-lg border bg-card p-0.5 text-xs"
+            role="tablist"
+            aria-label={t("discover.sort.title")}
+          >
+            {SORTS.map((sk) => {
+              const Icon =
+                sk === "velocity-since-creation"
+                  ? TrendingUp
+                  : sk === "recent-growth"
+                    ? Activity
+                    : Star;
+              return (
+                <button
+                  key={sk}
+                  type="button"
+                  role="tab"
+                  aria-selected={sort === sk}
+                  onClick={() => setSort(sk)}
+                  title={t(`discover.sort.${sk}.hint`)}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium transition",
+                    sort === sk
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  {t(`discover.sort.${sk}`)}
+                </button>
+              );
+            })}
+          </div>
           <LanguagePicker value={language} onChange={setLanguage} />
           <button
             type="button"
@@ -203,14 +287,28 @@ export default function TrendingPanel({
       )}
 
       {!hideControls && (
-        <p className="text-[11px] text-muted-foreground/90">
-          {t(
-            "discover.widget.hint",
-            t(`discover.range.${range}`),
-            String(rangeToWindowDays(range)),
-          )}{" "}
-          {t(`discover.mode.${mode}.hint`)}
-        </p>
+        <div className="space-y-1 text-[11px] text-muted-foreground/90">
+          <p>
+            {t(
+              "discover.widget.hint",
+              t(`discover.range.${range}`),
+              String(rangeToWindowDays(range)),
+            )}{" "}
+            {t(`discover.mode.${mode}.hint`)}
+            <span className="mx-1.5 opacity-50">·</span>
+            <span className="font-medium">{t(`discover.sort.${sort}`)}</span>
+            <span className="opacity-80">
+              {" — "}
+              {t(`discover.sort.${sort}.hint`)}
+            </span>
+          </p>
+          {recentMissing && (
+            <p className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">
+              <Info className="h-3 w-3" />
+              {t("discover.sort.recentMissing")}
+            </p>
+          )}
+        </div>
       )}
 
       {error && (
@@ -263,6 +361,7 @@ export default function TrendingPanel({
                 repo={r}
                 rank={i + 1}
                 compact={compact}
+                primaryMetric={sort}
                 bookmarkFolderId={settings.rootFolderId}
               />
             ))}

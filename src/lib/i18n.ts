@@ -83,13 +83,36 @@ const zh: Dict = {
   "discover.velocity": (n: string) => `均 ${n} ★/天`,
   "discover.velocity.hint":
     "创建以来平均每天获得的 stars，不是所选时间窗内的真实新增。",
+  "discover.recentVelocity": (n: string) => `近期 ${n} ★/天`,
+  "discover.recentVelocity.hint":
+    "基于本地两次刷新之间的真实增量计算的近期速度。",
+  "discover.recentVelocity.pending":
+    "再刷新一次后才能拿到真实的近期增长速度，当前显示的是创建以来均速。",
+  "discover.totalStars.hint": "按总 star 排序：直观的「现在大家用得最多」",
   "discover.gained.hint": (n: string, period: string) =>
     `距上次刷新 ${period}，新增 ${n} stars。`,
+  "discover.sort.title": "排序",
+  "discover.sort.auto": "自动",
+  "discover.sort.auto.hint":
+    "新建模式 → 创建以来均速；最热门模式 → 总 star",
+  "discover.sort.velocity-since-creation": "创建以来",
+  "discover.sort.velocity-since-creation.hint":
+    "按 stars / 仓库年龄 排序。适合「新建」模式。",
+  "discover.sort.recent-growth": "近期增长",
+  "discover.sort.recent-growth.hint":
+    "按本地两次刷新之间的真实 ★/天 排序。需先积累快照。",
+  "discover.sort.total-stars": "总 star",
+  "discover.sort.total-stars.hint": "按总 star 数降序。最直观的「现在最热」。",
+  "discover.sort.recentMissing":
+    "本地还没有该排序所需的快照，刷新一次后下次再来此排序就生效了。",
   "settings.discover": "发现 / GitHub 热门",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
     "可选。只需 public_repo 权限即可。填写后 API 限额从 60/h 提升到 5000/h。",
   "settings.discoverDefaults": "默认时段 / 语言",
+  "settings.discoverSort": "默认排序",
+  "settings.discoverSortHint":
+    "「自动」会根据当前模式选合适口径：新建 → 创建以来均速；最热门 → 总 star。「近期增长」需要至少积累一次刷新快照。",
   "settings.githubTokenSave": "保存",
   "settings.githubTokenClear": "清空",
   "settings.githubTokenCreate": "创建 Token",
@@ -301,13 +324,37 @@ const en: Dict = {
   "discover.velocity": (n: string) => `avg ${n} ★/day`,
   "discover.velocity.hint":
     "Average stars gained per day since the repo was created, not the actual gain inside the selected window.",
+  "discover.recentVelocity": (n: string) => `recent ${n} ★/day`,
+  "discover.recentVelocity.hint":
+    "Real growth velocity computed from the delta between two local refreshes.",
+  "discover.recentVelocity.pending":
+    "Refresh once more to capture real recent growth — falling back to all-time average for now.",
+  "discover.totalStars.hint": "Sorted by total stars: the simplest \"what's everyone using\".",
   "discover.gained.hint": (n: string, period: string) =>
     `+${n} stars since last refresh (${period} ago).`,
+  "discover.sort.title": "Sort",
+  "discover.sort.auto": "Auto",
+  "discover.sort.auto.hint":
+    "Newly Created → since creation; Hottest → total stars",
+  "discover.sort.velocity-since-creation": "Since creation",
+  "discover.sort.velocity-since-creation.hint":
+    "Sort by stars / repo age. Best for \"Newly Created\" mode.",
+  "discover.sort.recent-growth": "Recent growth",
+  "discover.sort.recent-growth.hint":
+    "Sort by ★/day between the last two local refreshes. Needs snapshots first.",
+  "discover.sort.total-stars": "Total stars",
+  "discover.sort.total-stars.hint":
+    "Sort by total star count desc — the simplest \"hot right now\".",
+  "discover.sort.recentMissing":
+    "No snapshots locally yet — refresh once and this sort will activate next time.",
   "settings.discover": "Discover / GitHub Trending",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
     "Optional. Needs only public_repo scope. Raises API quota from 60/h to 5000/h.",
   "settings.discoverDefaults": "Default range / language",
+  "settings.discoverSort": "Default sort",
+  "settings.discoverSortHint":
+    "\"Auto\" picks for you: Newly Created → since-creation; Hottest → total stars. \"Recent growth\" needs at least one refresh to gather snapshots.",
   "settings.githubTokenSave": "Save",
   "settings.githubTokenClear": "Clear",
   "settings.githubTokenCreate": "Create token",
