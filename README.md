@@ -3,6 +3,56 @@
 > 书签清理 + 新标签页看板 + AI 搜索 + 对比搜索 + 悬浮球 + 二维码 + 备份，一站式 Chrome / Edge 浏览器扩展。  
 > 致敬 [LazyCat Bookmark Cleaner](https://github.com/Alanrk/LazyCat-Bookmark-Cleaner) 和 [TabMark](https://github.com/Alanrk/TabMark-Bookmark-New-Tab)。
 
+> 🔱 **本仓库 fork 自 [xiaoniuge36/Smart-Bookmark](https://github.com/xiaoniuge36/Smart-Bookmark)**，
+> 在原作者的基础上对新标签页书签看板做了较大幅度的体验增强（详见下方「本仓库的修改」一节）。
+> 衷心感谢 [@xiaoniuge36](https://github.com/xiaoniuge36) 提供了如此完整的初始实现。
+
+## 🆕 本仓库的修改（基于原版 0.2 之上）
+
+新增 / 调整的能力主要集中在「新标签页 → 书签」页面，目标是把它做成一个**真正可日常用的书签主页**：
+
+### 布局与可读性
+- 顶栏 / 内容区最大宽度提升至 1760px，宽屏不再两侧大量留白
+- 整页改为视口高度 + 内部分区滚动，**搜索框 sticky 时不再越过顶栏**
+- 新增「书签导航宽度」**拖拽分隔条**：左右两栏中间细线可拖动调节，松手保存到设置；双击恢复默认
+- 删除底部「Smart Bookmark · 本地优先 …」页脚文字
+- 设置页拓宽到 max-w-5xl，Row 标签列加宽
+
+### 书签视图
+- 选中非底层文件夹时，右侧改为**按子文件夹分组展示**：每组卡片化呈现文件夹名 / 数量 / 部分书签预览，大屏每行 ≥5
+- 书签卡片由「上下结构」改为「左图标 + 右标题 + URL 居中」，URL 行使用与正文同步缩放的 `text-meta`
+- 「全部书签」默认每页 60 条；其余文件夹默认 30 条；分页 / 切换文件夹时**自动滚回顶部**
+- 书签 / 文件夹**右键菜单**全量化：
+  - 书签：在新标签页 / 新窗口 / 隐身窗口打开、展示二维码、编辑、复制、删除
+  - 文件夹：根据层级动态显示「全部新标签页打开 (N) / 新窗口 / 隐身、添加文件夹、重命名、删除」
+- 编辑书签弹窗支持改**标题 / URL / 所属文件夹**（带模糊搜索的文件夹树选择器）
+- 新建文件夹后自动进入**内联重命名**
+
+### 「常用」与搜索
+- 顶部「常用」改为按访问频次（`chrome.topSites`）显示前 15 个，标题做了渐变美化
+- 搜索为**全局检索**（不再受当前文件夹影响）
+- 提交搜索（按钮 / Enter）一律调用当前搜索引擎，**不再"自动打开第一个匹配书签"**
+- 搜索浮层重做：单滚动条 + 分段 sticky 标题 + 「查看全部 N 条匹配书签」「在浏览历史中查看更多」入口（后者跳转 `chrome://history/?q=…`）
+- 删除搜索框下「匹配 N 个书签 · Enter 走搜索引擎」赘述文字
+- 点击空白只关闭浮层、不清空查询；选中左侧文件夹 / 面包屑会一并清空查询并退出搜索焦点
+
+### 动画 & 流畅性
+- 入场动画从「逐卡延迟」改为**整页同步上浮（PPT「上浮（轻微）」效果）**，方向严格由下往上
+- 动画曲线 `cubic-bezier(0.16, 1, 0.3, 1)`，仅 transform / opacity 触发 GPU 合成
+- 主滚动容器 `contain: paint`、`scrollbar-gutter: stable`，悬浮 hover 过渡限定到 transform / shadow，避免 layout 抖动
+- 设置页提供「书签动画」**总开关**与系统级 `prefers-reduced-motion` 适配
+
+### 设置页新增项
+- **字体大小**：4 档预设 + 滑块，作用于 `<html>` 字号 + 自定义 `--app-font-scale`，URL 等 px 文本一并缩放
+- **书签动画**：开关
+- **壁纸不透明度**：滑块；同时把壁纸图层抬到主层之上、降低主层遮罩，让壁纸真正"看得见"
+- 旧的「侧栏宽度档位」选项移除，改为前述拖拽方式
+
+### 性能 & 内部
+- 一次遍历构建 `nodeMap / countMap / flat` 三件套（`buildIndex`），消除 `FolderTree` 渲染时的重复递归
+- `chrome.bookmarks` 变化事件加 200ms debounce 重载
+- 用 `useMemo / useCallback` 抽离热路径，分页变化时滚动平滑过渡
+
 ## ✨ 功能
 
 ### 🧹 书签清理中心
@@ -80,7 +130,10 @@ npm run zip       # 构建并打包 dist.zip，可上传商店
 仓库已附带最新的预构建产物 `dist/`，`git clone` 后**无需 npm install** 即可直接加载：
 
 ```bash
-git clone https://github.com/xiaoniuge36/Smart-Bookmark.git
+# 本 fork
+git clone https://github.com/yzgolden86/Smart-Bookmark.git
+# 或原始仓库
+# git clone https://github.com/xiaoniuge36/Smart-Bookmark.git
 ```
 
 1. Chrome / Edge 打开 `chrome://extensions` 或 `edge://extensions`
@@ -153,7 +206,12 @@ smart-bookmark/
 
 ## 🙏 致谢
 
-感谢真诚、友善、团结、专业的 Linuxdo 社区，让我学到那么多有关ai相关知识。
+特别感谢原始仓库作者 **[@xiaoniuge36](https://github.com/xiaoniuge36)** 创建并持续维护
+[xiaoniuge36/Smart-Bookmark](https://github.com/xiaoniuge36/Smart-Bookmark)。
+本仓库是在其工作基础上派生出来的个人定制版本，所有底层架构（MV3 多入口 / 备份 / 清理 / AI / 悬浮球 / 对比搜索等）
+均由原作者实现，本 fork 仅在新标签页书签看板上做了体验向的二次开发。
+
+同时感谢真诚、友善、团结、专业的 Linuxdo 社区，让我学到那么多有关 ai 相关知识。
 
 <p>
   <a href="https://linux.do">
