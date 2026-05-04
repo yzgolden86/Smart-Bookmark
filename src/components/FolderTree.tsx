@@ -98,14 +98,27 @@ function FolderIcon({
   );
 }
 
+export interface FolderCtxTarget {
+  id: string;
+  title: string;
+  depth: number;
+  count: number;
+  hasChildren: boolean;
+}
+
 export interface FolderTreeProps {
   tree: BookmarkNode[];
   selectedId?: string;
   expanded: Set<string>;
   pinnedIds: Set<string>;
+  countMap?: Map<string, number>;
   onToggle: (id: string) => void;
   onSelect: (id: string | "") => void;
   onTogglePin: (id: string) => void;
+  editingId?: string | null;
+  onRename?: (id: string, title: string) => void;
+  onCancelEdit?: () => void;
+  onContextMenu?: (folder: FolderCtxTarget, x: number, y: number) => void;
 }
 
 interface FolderItem {
@@ -123,12 +136,17 @@ export default function FolderTree(props: FolderTreeProps) {
     selectedId,
     expanded,
     pinnedIds,
+    countMap,
     onToggle,
     onSelect,
     onTogglePin,
+    editingId,
+    onRename,
+    onCancelEdit,
+    onContextMenu,
   } = props;
 
-  const items = useMemo(() => flattenForTree(tree, expanded), [tree, expanded]);
+  const items = useMemo(() => flattenForTree(tree, expanded, countMap), [tree, expanded, countMap]);
 
   return (
     <div className="space-y-0.5 text-sm">
@@ -158,6 +176,21 @@ export default function FolderTree(props: FolderTreeProps) {
         return (
           <div
             key={f.id}
+            onContextMenu={(e) => {
+              if (!onContextMenu) return;
+              e.preventDefault();
+              onContextMenu(
+                {
+                  id: f.id,
+                  title: f.title,
+                  depth: f.depth,
+                  count: f.count,
+                  hasChildren: f.hasChildren,
+                },
+                e.clientX,
+                e.clientY,
+              );
+            }}
             className={cn(
               "group relative flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-muted/60",
               isSelected &&
@@ -194,11 +227,29 @@ export default function FolderTree(props: FolderTreeProps) {
                   isSelected ? "scale-105" : "opacity-95 group-hover:opacity-100",
                 )}
               />
-              <span
-                className={cn("flex-1 truncate", isSelected && "font-medium")}
-              >
-                {f.title || "(未命名)"}
-              </span>
+              {editingId === f.id ? (
+                <input
+                  autoFocus
+                  defaultValue={f.title}
+                  onClick={(e) => e.stopPropagation()}
+                  onBlur={(e) => {
+                    const next = e.currentTarget.value.trim();
+                    if (next && next !== f.title) onRename?.(f.id, next);
+                    else onCancelEdit?.();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.currentTarget.blur();
+                    if (e.key === "Escape") onCancelEdit?.();
+                  }}
+                  className="min-w-0 flex-1 rounded border bg-background px-1 py-0.5 text-sm outline-none ring-1 ring-primary/30"
+                />
+              ) : (
+                <span
+                  className={cn("flex-1 truncate", isSelected && "font-medium")}
+                >
+                  {f.title || "(未命名)"}
+                </span>
+              )}
               <span
                 className={cn(
                   "shrink-0 text-[11px] tabular-nums transition-colors",
@@ -238,6 +289,7 @@ export default function FolderTree(props: FolderTreeProps) {
 function flattenForTree(
   tree: BookmarkNode[],
   expanded: Set<string>,
+  countMap?: Map<string, number>,
 ): FolderItem[] {
   const out: FolderItem[] = [];
   const walk = (
@@ -248,7 +300,7 @@ function flattenForTree(
     if (!node.url && node.id !== "0") {
       const children = node.children ?? [];
       const subFolders = children.filter((c) => !c.url);
-      const count = countBookmarks(node);
+      const count = countMap?.get(node.id) ?? countBookmarks(node);
       out.push({
         id: node.id,
         title: node.title || "(未命名)",

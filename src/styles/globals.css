@@ -2,6 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 整页书签「上浮 (PPT Rise)」入场动画
+ *
+ * - 还原 PowerPoint 中"上浮（轻微）"效果：内容从下方滑入到目标位置，
+ *   方向严格"由下往上"，不再做缩放/弹性变化。
+ * - 起点：透明 + 向下偏移 28px；
+ * - 终点：完全显示并归位；
+ * - 曲线：cubic-bezier(0.16, 1, 0.3, 1)（"easeOutExpo" 风格），
+ *   起步快、收尾长，给人飘上来再稳住的感觉；
+ * - 性能：仅 transform / opacity，由合成器接管，不触发 layout。
+ */
+@keyframes page-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-page-rise {
+  animation: page-rise 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-origin: 50% 100%;
+}
+
+/* 旧的逐卡动画保留，供别处需要时使用 */
+@keyframes bookmark-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-bookmark-rise {
+  animation: bookmark-rise 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* 用户在系统级开启「减弱动效」时尊重偏好。 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-rise,
+  .animate-bookmark-rise {
+    animation-duration: 1ms;
+    animation-delay: 0ms !important;
+  }
+}
+
+/*
+ * 字体缩放变量。--app-font-scale 由 App.tsx 注入到 :root 上（默认 1）。
+ * 之前我们已经通过修改 documentElement.fontSize 让 rem/em 单位同步缩放，
+ * 但 text-[11px] 这类硬编码像素的副标（如书签 URL、常用副文字）不受影响。
+ * 这里提供 .text-meta 工具类，按比例缩放，由 Dashboard 的 url / 副标使用。
+ */
+.text-meta {
+  font-size: calc(11px * var(--app-font-scale, 1));
+  line-height: 1.35;
+}
+.text-meta-sm {
+  font-size: calc(10.5px * var(--app-font-scale, 1));
+  line-height: 1.35;
+}
+
+/* 全局滚动平滑：列表分页/切换文件夹时 scrollTop 切回 0 也会平滑过渡。 */
+html {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -412,3 +491,22 @@
 .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
 .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 8px; }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+/*
+ * 性能优化：
+ * - .scroll-area 内只重绘自己，不会牵连父级（contain: paint）。
+ * - .lift-card 的 hover 只改变 transform 与 box-shadow，渲染成本低。
+ * - 整体使用 GPU 友好的 transform 实现位移，避免 top/margin 触发 layout。
+ */
+.scroll-area {
+  contain: paint;
+  scrollbar-gutter: stable;
+}
+.lift-card {
+  transition-property: transform, box-shadow, border-color, background-color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lift-card:hover {
+  transform: translate3d(0, -2px, 0);
+}

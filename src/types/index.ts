@@ -110,6 +110,14 @@ export interface Settings {
   discoverDefaultLanguage?: string;
   /** Discover 页默认排序口径（auto=按 mode 自适应） */
   discoverDefaultSort?: TrendingSort;
+  /** UI 字体缩放（1=默认，0.85~1.3） */
+  fontScale?: number;
+  /** 书签导航栏宽度（像素，由分隔条拖动调节，220~520） */
+  sidebarWidth?: number;
+  /** 是否启用书签上浮动画 */
+  bookmarkAnimation?: boolean;
+  /** 壁纸不透明度（0~1，1=完全可见） */
+  wallpaperOpacity?: number;
 }
 
 export type TrendingRange = "daily" | "weekly" | "monthly" | "yearly";

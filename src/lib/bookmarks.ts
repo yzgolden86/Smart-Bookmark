@@ -28,6 +28,63 @@ export async function moveBookmark(id: string, parentId: string, index?: number)
   await chrome.bookmarks.move(id, { parentId, index });
 }
 
+export async function updateBookmark(id: string, title: string, url?: string) {
+  if (!hasChromeBookmarks) return;
+  await chrome.bookmarks.update(id, { title, ...(url ? { url } : {}) });
+}
+
+export async function createFolder(parentId: string, title: string): Promise<BookmarkNode | undefined> {
+  if (!hasChromeBookmarks) return;
+  return await chrome.bookmarks.create({ parentId, title });
+}
+
+/** 单次遍历构建的索引，避免后续重复递归 */
+export interface TreeIndex {
+  /** id → 节点引用 */
+  nodeMap: Map<string, BookmarkNode>;
+  /** id → 该文件夹下的书签数（只计叶子 url） */
+  countMap: Map<string, number>;
+  /** 完整扁平书签列表 */
+  flat: FlatBookmark[];
+}
+
+/** 单次遍历完成 nodeMap + countMap + flat，O(N) */
+export function buildIndex(nodes: BookmarkNode[]): TreeIndex {
+  const nodeMap = new Map<string, BookmarkNode>();
+  const countMap = new Map<string, number>();
+  const flat: FlatBookmark[] = [];
+
+  const walk = (node: BookmarkNode, path: string): number => {
+    const here = node.title ? (path ? `${path} / ${node.title}` : node.title) : path;
+    if (!node.url) {
+      nodeMap.set(node.id, node);
+      let count = 0;
+      for (const c of node.children ?? []) count += walk(c, here);
+      countMap.set(node.id, count);
+      return count;
+    }
+    // leaf
+    flat.push({
+      id: node.id,
+      parentId: node.parentId,
+      title: node.title || node.url,
+      url: node.url,
+      path: path || "Bookmarks",
+      dateAdded: node.dateAdded,
+    });
+    return 1;
+  };
+
+  let total = 0;
+  for (const n of nodes) total += walk(n, "");
+  // root node
+  if (nodes.length === 1) {
+    nodeMap.set(nodes[0].id, nodes[0]);
+    countMap.set(nodes[0].id, total);
+  }
+  return { nodeMap, countMap, flat };
+}
+
 export function flatten(nodes: BookmarkNode[], pathPrefix = ""): FlatBookmark[] {
   const out: FlatBookmark[] = [];
   const walk = (node: BookmarkNode, path: string) => {

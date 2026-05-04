@@ -54,7 +54,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto w-full max-w-5xl space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.appearance")}</CardTitle>
@@ -190,14 +190,100 @@ export default function SettingsPage() {
               ))}
             </div>
           </Row>
+          <Row label={t("settings.fontScale")}>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {(
+                  [
+                    [0.9, t("settings.fontScaleSmall")],
+                    [1, t("settings.fontScaleMedium")],
+                    [1.1, t("settings.fontScaleLarge")],
+                    [1.25, t("settings.fontScaleXl")],
+                  ] as const
+                ).map(([v, label]) => (
+                  <Button
+                    key={String(v)}
+                    size="sm"
+                    variant={
+                      Math.abs((s.fontScale ?? 1) - v) < 0.01
+                        ? "default"
+                        : "outline"
+                    }
+                    onClick={() => update({ fontScale: v })}
+                  >
+                    {label}
+                  </Button>
+                ))}
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {Math.round((s.fontScale ?? 1) * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0.85}
+                max={1.3}
+                step={0.05}
+                value={s.fontScale ?? 1}
+                onChange={(e) =>
+                  update({ fontScale: Number(e.target.value) })
+                }
+                className="w-full accent-[hsl(var(--primary))]"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                {t("settings.fontScaleHint")}
+              </p>
+            </div>
+          </Row>
+          <Row label={t("settings.sidebarSpan")}>
+            <p className="text-xs text-muted-foreground">
+              {t("settings.sidebarSpanDragHint")}
+            </p>
+          </Row>
+          <Row label={t("settings.bookmarkAnimation")}>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={s.bookmarkAnimation ?? true}
+                onCheckedChange={(v) => update({ bookmarkAnimation: v })}
+              />
+              <span className="text-xs text-muted-foreground">
+                {t("settings.bookmarkAnimationHint")}
+              </span>
+            </div>
+          </Row>
           <Row label={t("settings.wallpaper")}>
-            <Input
-              placeholder={t("settings.wallpaperPh")}
-              value={s.wallpaper ?? ""}
-              onChange={(e) =>
-                update({ wallpaper: e.target.value || undefined })
-              }
-            />
+            <div className="space-y-2">
+              <Input
+                placeholder={t("settings.wallpaperPh")}
+                value={s.wallpaper ?? ""}
+                onChange={(e) =>
+                  update({ wallpaper: e.target.value || undefined })
+                }
+              />
+              {s.wallpaper && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{t("settings.wallpaperOpacity")}</span>
+                    <span className="tabular-nums">
+                      {Math.round((s.wallpaperOpacity ?? 1) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    value={s.wallpaperOpacity ?? 1}
+                    onChange={(e) =>
+                      update({ wallpaperOpacity: Number(e.target.value) })
+                    }
+                    className="w-full accent-[hsl(var(--primary))]"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("settings.wallpaperOpacityHint")}
+                  </p>
+                </div>
+              )}
+            </div>
           </Row>
         </CardContent>
       </Card>
@@ -573,11 +659,11 @@ export default function SettingsPage() {
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[120px_1fr] items-start gap-4">
+    <div className="grid grid-cols-[160px_1fr] items-start gap-4">
       <div className="pt-2 text-sm font-medium text-muted-foreground">
         {label}
       </div>
-      <div>{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

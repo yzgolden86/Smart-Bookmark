@@ -11,5 +11,6 @@ dist.zip
 .cursor/
 .vscode/
 .idea/
+.claude/
 *.swp
 Thumbs.db

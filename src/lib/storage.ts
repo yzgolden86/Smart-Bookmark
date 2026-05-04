@@ -25,6 +25,10 @@ export const DEFAULT_SETTINGS: Settings = {
   discoverDefaultRange: "weekly",
   discoverDefaultMode: "created",
   discoverDefaultLanguage: "",
+  fontScale: 1,
+  sidebarWidth: 280,
+  bookmarkAnimation: true,
+  wallpaperOpacity: 1,
 };
 
 const hasChromeStorage = typeof chrome !== "undefined" && !!chrome.storage?.local;
