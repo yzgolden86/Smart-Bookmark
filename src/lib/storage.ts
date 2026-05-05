@@ -29,6 +29,8 @@ export const DEFAULT_SETTINGS: Settings = {
   sidebarWidth: 280,
   bookmarkAnimation: true,
   wallpaperOpacity: 1,
+  bookmarkOpenMode: "newtab",
+  webdav: { url: "", username: "", password: "", folder: "/smart-bookmark/" },
 };
 
 const hasChromeStorage = typeof chrome !== "undefined" && !!chrome.storage?.local;

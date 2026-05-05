@@ -250,6 +250,39 @@ export default function SettingsPage() {
               </span>
             </div>
           </Row>
+          <Row label={t("settings.bookmarkOpenMode")}>
+            <div className="space-y-1.5">
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["newtab", t("settings.bookmarkOpenModeNewTab")],
+                    ["current", t("settings.bookmarkOpenModeCurrent")],
+                  ] as const
+                ).map(([v, label]) => (
+                  <Button
+                    key={v}
+                    size="sm"
+                    variant={
+                      (s.bookmarkOpenMode ?? "newtab") === v
+                        ? "default"
+                        : "outline"
+                    }
+                    onClick={() =>
+                      update({
+                        bookmarkOpenMode:
+                          v as Settings["bookmarkOpenMode"],
+                      })
+                    }
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {t("settings.bookmarkOpenModeHint")}
+              </p>
+            </div>
+          </Row>
           <Row label={t("settings.wallpaper")}>
             <div className="space-y-2">
               <Input

@@ -118,6 +118,16 @@ export interface Settings {
   bookmarkAnimation?: boolean;
   /** 壁纸不透明度（0~1，1=完全可见） */
   wallpaperOpacity?: number;
+  /** 点击书签的默认打开方式：current=当前页打开；newtab=新标签页打开 */
+  bookmarkOpenMode?: "current" | "newtab";
+  /** WebDAV 备份配置（可选） */
+  webdav?: {
+    url?: string;
+    username?: string;
+    password?: string;
+    /** 备份文件存放目录（默认 /smart-bookmark/） */
+    folder?: string;
+  };
 }
 
 export type TrendingRange = "daily" | "weekly" | "monthly" | "yearly";

@@ -138,20 +138,24 @@ const zh: Dict = {
   "cleaner.noResult": "还没有扫描结果。点击「开始扫描」开始体检。",
   "cleaner.confirmClean": (n: string) => `确定要清理 ${n} 条吗？此操作不可撤销。`,
 
-  "ai.title": "书签代理",
+  "ai.title": "书签助手",
   "ai.userLabel": "你",
-  "ai.assistantLabel": "代理",
+  "ai.assistantLabel": "AI助手",
   "ai.disabled": "未启用",
-  "ai.emptyHeading": "你的书签智能代理",
+  "ai.emptyHeading": "你的书签智能助手",
   "ai.emptyDesc":
-    "我能基于你本机的书签做整理、去重、推荐与搜索。点击下面的例子开始，或直接说你想做的事。",
-  "ai.placeholder": "问问你的书签…例如「按主题帮我分类」",
+    "我可以基于你本机的书签做整理、去重、推荐和搜索，也能回答日常文档、编程等通用问题。点击下面的例子开始，或直接说你想做的事。",
+  "ai.placeholder": "问问我任何事…例如「按主题帮我分类书签」「写一段 Python 读 csv」",
   "ai.send": "发送",
   "ai.needKey": "请先在『设置』里选择 AI Provider 并填入 API Key。",
   "ai.suggestOrganize": "按主题帮我整理书签",
   "ai.suggestFindDups": "找出可能重复的书签",
   "ai.suggestRecommend": "根据我的书签推荐相关网站",
   "ai.suggestSummary": "总结我最常收藏的领域",
+  "ai.thinking": "AI 正在思考…",
+  "ai.export": "导出对话",
+  "ai.clear": "清空对话",
+  "ai.confirmClear": "确定清空当前对话并开始新一轮吗？",
 
   "compare.title": "对比搜索",
   "compare.placeholder": "输入查询词，同时在多个搜索引擎中打开…",
@@ -211,6 +215,11 @@ const zh: Dict = {
   "settings.sidebarSpanWide": "宽",
   "settings.bookmarkAnimation": "书签动画",
   "settings.bookmarkAnimationHint": "关闭后书签直接出现，不再有上浮过渡。",
+  "settings.bookmarkOpenMode": "书签打开方式",
+  "settings.bookmarkOpenModeNewTab": "新标签页打开",
+  "settings.bookmarkOpenModeCurrent": "当前页打开",
+  "settings.bookmarkOpenModeHint":
+    "决定左键点击书签时的默认行为；按住 Ctrl/⌘ 或鼠标中键始终在新标签页打开。",
   "settings.wallpaperOpacity": "壁纸不透明度",
   "settings.wallpaperOpacityHint":
     "降低不透明度可让壁纸变淡，避免影响书签卡片可读性。",
@@ -399,20 +408,24 @@ const en: Dict = {
   "cleaner.confirmClean": (n: string) =>
     `Are you sure to remove ${n} bookmarks? This cannot be undone.`,
 
-  "ai.title": "Bookmark Agent",
+  "ai.title": "Bookmark Assistant",
   "ai.userLabel": "You",
-  "ai.assistantLabel": "Agent",
+  "ai.assistantLabel": "AI Assistant",
   "ai.disabled": "Disabled",
-  "ai.emptyHeading": "Your bookmark-aware agent",
+  "ai.emptyHeading": "Your bookmark-aware assistant",
   "ai.emptyDesc":
-    "I work on top of your local bookmarks — organizing, deduping, recommending, and searching. Tap a suggestion below or just tell me what you need.",
-  "ai.placeholder": "Ask about your bookmarks… e.g. \"Group them by topic\"",
+    "I can organize / dedupe / recommend / search your local bookmarks, and answer general questions on docs, coding and more. Tap a suggestion below or just tell me what you need.",
+  "ai.placeholder": "Ask me anything… e.g. \"Group my bookmarks by topic\" or \"Write a Python script to read CSV\"",
   "ai.send": "Send",
   "ai.needKey": "Pick an AI provider and set the API Key in Settings first.",
   "ai.suggestOrganize": "Group my bookmarks by topic",
   "ai.suggestFindDups": "Find potential duplicate bookmarks",
   "ai.suggestRecommend": "Recommend related sites based on my bookmarks",
   "ai.suggestSummary": "Summarize the domains I save most",
+  "ai.thinking": "AI is thinking…",
+  "ai.export": "Export chat",
+  "ai.clear": "Clear chat",
+  "ai.confirmClear": "Clear current conversation and start a fresh one?",
 
   "compare.title": "Compare search",
   "compare.placeholder":
@@ -473,6 +486,11 @@ const en: Dict = {
   "settings.sidebarSpanWide": "Wide",
   "settings.bookmarkAnimation": "Bookmark animation",
   "settings.bookmarkAnimationHint": "Disable to skip the rise-in animation.",
+  "settings.bookmarkOpenMode": "Open bookmarks in",
+  "settings.bookmarkOpenModeNewTab": "New tab",
+  "settings.bookmarkOpenModeCurrent": "Current tab",
+  "settings.bookmarkOpenModeHint":
+    "Default behavior on left-click. Ctrl/⌘ click or middle-click always opens in a new tab.",
   "settings.wallpaperOpacity": "Wallpaper opacity",
   "settings.wallpaperOpacityHint":
     "Lower opacity to fade the wallpaper so cards stay readable.",

@@ -73,6 +73,56 @@ export default function Compare({ settings }: { settings: Settings }) {
     pushHistory(q);
   };
 
+  /**
+   * 用户期望「内嵌对比」，但 Google/Bing/百度/Yandex 等主流引擎都通过
+   * X-Frame-Options/CSP frame-ancestors 拒绝被 iframe 嵌入，前端无法绕过。
+   * 这里提供「并排新窗口」体验：把所选引擎切成网格，在屏幕上平铺为多个窗口，
+   * 视觉上等价于多屏对比。
+   */
+  const openAllInTiledWindows = async () => {
+    const q = query.trim();
+    if (!q) return;
+    if (!chrome.windows?.create) {
+      // 退化：直接 window.open 平铺
+      const w = Math.floor(window.screen.availWidth / Math.max(1, selected.length));
+      const h = window.screen.availHeight;
+      selected.forEach((e, i) => {
+        window.open(
+          e.url(q),
+          `cmp_${e.id}`,
+          `popup=yes,left=${i * w},top=0,width=${w},height=${h}`,
+        );
+      });
+      pushHistory(q);
+      return;
+    }
+    const screenW = window.screen.availWidth;
+    const screenH = window.screen.availHeight;
+    const cols = Math.min(selected.length, 3);
+    const rows = Math.ceil(selected.length / cols);
+    const winW = Math.floor(screenW / cols);
+    const winH = Math.floor(screenH / rows);
+    for (let i = 0; i < selected.length; i++) {
+      const e = selected[i];
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      try {
+        await chrome.windows.create({
+          url: e.url(q),
+          type: "popup",
+          left: col * winW,
+          top: row * winH,
+          width: winW,
+          height: winH,
+        });
+      } catch {
+        window.open(e.url(q), "_blank");
+      }
+    }
+    pushHistory(q);
+    toast(`已分屏打开 ${selected.length} 个搜索引擎`, "success");
+  };
+
   const toggleEngine = async (id: string) => {
     const cur = new Set(selectedIds);
     cur.has(id) ? cur.delete(id) : cur.add(id);
@@ -109,8 +159,17 @@ export default function Compare({ settings }: { settings: Settings }) {
             <Button type="submit" className="gap-2">
               <ExternalLink className="h-4 w-4" /> 一键全引擎打开
             </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={openAllInTiledWindows}
+              className="gap-2"
+              title="把所选引擎平均分屏到屏幕上"
+            >
+              <ExternalLink className="h-4 w-4" /> 分屏多窗口
+            </Button>
             <Button type="button" variant="outline" onClick={runEmbed}>
-              展示内嵌结果
+              展示内嵌结果（部分引擎不支持）
             </Button>
           </form>
 
@@ -252,7 +311,9 @@ function EngineColumn({
               <img src={faviconFor(engine)} alt="" className="h-7 w-7 rounded" />
             </div>
             <div className="text-muted-foreground">
-              {engine.name} 不支持内嵌，请在新标签页查看结果
+              {engine.name} 通过 X-Frame-Options 拒绝被 iframe 嵌入，无法在本页内显示
+              <br />
+              <span className="text-[11px]">这是搜索引擎自身的安全策略，扩展无法绕过。可改用上方的"分屏多窗口"。</span>
             </div>
             <a
               href={url}
@@ -260,7 +321,7 @@ function EngineColumn({
               rel="noreferrer"
               className="rounded-md bg-primary px-4 py-2 text-primary-foreground shadow hover:opacity-90"
             >
-              打开 {engine.name}
+              在新标签页打开 {engine.name}
             </a>
             <code className="max-w-full break-all rounded bg-background/60 px-2 py-1 text-[10px] text-muted-foreground">
               {url}

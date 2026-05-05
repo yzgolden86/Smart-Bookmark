@@ -11,6 +11,8 @@ export interface ScanProgress {
 export interface ScanOptions {
   checkInvalid: boolean;
   concurrency: number;
+  /** 单次失效检测的网络超时（ms），默认 4500，太短会误杀慢站。 */
+  timeoutMs?: number;
   signal?: AbortSignal;
   onProgress?: (p: ScanProgress) => void;
 }
@@ -20,7 +22,8 @@ export async function scanAll(
 ): Promise<CleanIssue[]> {
   const options: ScanOptions = {
     checkInvalid: true,
-    concurrency: 8,
+    concurrency: 16,
+    timeoutMs: 4500,
     ...opts,
   };
   const tree = await getTree();
@@ -118,15 +121,23 @@ export async function scanInvalid(
   const total = targets.length;
   let checked = 0;
   const out: CleanIssue[] = [];
+  const timeout = options.timeoutMs ?? 4500;
 
-  const queue = [...targets];
-  const workers = Array.from({ length: options.concurrency }, async () => {
-    while (queue.length) {
+  // 使用游标 + Promise.allSettled 的并发模型，避免 Array.shift 的 O(N) 抖动；
+  // 每个 worker 不停取下一个 index，直到 targets 耗尽。
+  let cursor = 0;
+  const work = async () => {
+    while (true) {
       if (options.signal?.aborted) return;
-      const b = queue.shift()!;
-      const alive = await pingAlive(b.url, options.signal);
+      const i = cursor++;
+      if (i >= targets.length) return;
+      const b = targets[i];
+      const alive = await pingAlive(b.url, options.signal, timeout);
       checked++;
-      options.onProgress?.({ total, checked, phase: "invalid" });
+      // 每隔几个再回报，避免 onProgress 调用过于频繁占住 UI 线程。
+      if (checked % 4 === 0 || checked === total) {
+        options.onProgress?.({ total, checked, phase: "invalid" });
+      }
       if (!alive) {
         out.push({
           id: `invalid-${b.id}`,
@@ -137,14 +148,19 @@ export async function scanInvalid(
         });
       }
     }
-  });
+  };
+  const workers = Array.from({ length: options.concurrency }, () => work());
   await Promise.all(workers);
   return out;
 }
 
-async function pingAlive(url: string, signal?: AbortSignal): Promise<boolean> {
+async function pingAlive(
+  url: string,
+  signal?: AbortSignal,
+  timeoutMs = 4500,
+): Promise<boolean> {
   const ctrl = new AbortController();
-  const timeout = setTimeout(() => ctrl.abort(), 6000);
+  const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
   signal?.addEventListener("abort", () => ctrl.abort(), { once: true });
   try {
     const res = await fetch(url, {
@@ -156,7 +172,12 @@ async function pingAlive(url: string, signal?: AbortSignal): Promise<boolean> {
     return res.ok || res.type === "opaque";
   } catch {
     try {
-      const res = await fetch(url, { method: "GET", mode: "no-cors", signal: ctrl.signal });
+      // HEAD 被拦截时退化到 GET，但只读响应头，不消费 body
+      const res = await fetch(url, {
+        method: "GET",
+        mode: "no-cors",
+        signal: ctrl.signal,
+      });
       return res.type === "opaque" || res.ok;
     } catch {
       return false;

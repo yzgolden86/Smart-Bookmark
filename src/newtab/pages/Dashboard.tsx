@@ -493,6 +493,51 @@ export default function Dashboard({
       .filter((n): n is BookmarkNode => !!n && !n.url);
   }, [pinnedIds, treeIndex]);
 
+  /**
+   * 统一打开链接的助手：
+   * - 鼠标中键（button === 1，由 onAuxClick / onMouseDown 触发）→ 新标签页打开但保持当前页（与浏览器行为一致）；
+   * - 左键（button === 0）：尊重设置 `bookmarkOpenMode`（默认 newtab）；按住 Ctrl/⌘/Shift 始终新标签页；
+   * - 右键不在这里处理，由 onContextMenu 承担。
+   *
+   * 这样 <a target="_blank"> 与 settings.bookmarkOpenMode 之间的冲突就消除了。
+   */
+  const openBookmark = useCallback(
+    (url: string, e?: React.MouseEvent) => {
+      if (!url) return;
+      const wantNewTab =
+        !!e &&
+        (e.button === 1 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey);
+      const mode = settings.bookmarkOpenMode ?? "newtab";
+      if (wantNewTab || mode === "newtab") {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.href = url;
+      }
+    },
+    [settings.bookmarkOpenMode],
+  );
+
+  /**
+   * 统一拦截 onAuxClick：很多浏览器在 onAuxClick(button=1) 上才能稳定捕获中键。
+   * 注意 React 的合成事件支持 onAuxClick；onMouseDown(button=1) 也会触发，
+   * 但浏览器有时会同步打开"自动滚动模式"，所以 preventDefault。
+   */
+  const onBookmarkAuxClick = useCallback(
+    (e: React.MouseEvent, url: string) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      window.open(url, "_blank", "noopener,noreferrer");
+    },
+    [],
+  );
+  const onBookmarkMouseDown = useCallback((e: React.MouseEvent) => {
+    // 阻止中键触发自动滚动光标
+    if (e.button === 1) e.preventDefault();
+  }, []);
+
   const greeting = useGreeting();
   const animationOn = settings.bookmarkAnimation !== false;
 
@@ -870,12 +915,23 @@ export default function Dashboard({
               )}
             >
               {topSites.slice(0, 15).map((s) => (
-                <a
+                <button
                   key={s.url}
-                  href={s.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex items-center gap-3 rounded-2xl border border-border/40 bg-card/55 p-3 backdrop-blur-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card/85 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] hover:ring-1 hover:ring-primary/20"
+                  type="button"
+                  onClick={(e) => openBookmark(s.url, e)}
+                  onAuxClick={(e) => onBookmarkAuxClick(e, s.url)}
+                  onMouseDown={onBookmarkMouseDown}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setCtxMenu({
+                      id: `topsite:${s.url}`,
+                      url: s.url,
+                      title: s.title || hostnameOf(s.url),
+                      x: e.clientX,
+                      y: e.clientY,
+                    });
+                  }}
+                  className="group flex items-center gap-3 rounded-2xl border border-border/40 bg-card/55 p-3 text-left backdrop-blur-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card/85 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] hover:ring-1 hover:ring-primary/20"
                   title={s.url}
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/80 ring-1 ring-border/60 transition group-hover:ring-primary/30 group-hover:shadow-sm">
@@ -891,7 +947,7 @@ export default function Dashboard({
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground/90 transition group-hover:text-foreground">
                     {s.title || hostnameOf(s.url)}
                   </span>
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -953,6 +1009,8 @@ export default function Dashboard({
                       <BookmarkMiniCard
                         key={b.id}
                         bookmark={b}
+                        onOpen={(e) => openBookmark(b.url, e)}
+                        onAuxOpen={(e) => onBookmarkAuxClick(e, b.url)}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           setCtxMenu({
@@ -1076,13 +1134,18 @@ export default function Dashboard({
               )}
               title={b.url}
             >
-              <a
-                href={b.url}
-                target="_blank"
-                rel="noreferrer"
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(e) => openBookmark(b.url, e)}
+                onAuxClick={(e) => onBookmarkAuxClick(e, b.url)}
+                onMouseDown={onBookmarkMouseDown}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") openBookmark(b.url);
+                }}
                 className={cn(
-                  "flex w-full flex-col gap-2 px-2",
-                  canReorder && "cursor-inherit",
+                  "flex w-full cursor-pointer flex-col gap-2 px-2",
+                  canReorder && "cursor-grab",
                 )}
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -1103,7 +1166,7 @@ export default function Dashboard({
                 <div className="text-meta w-full truncate text-center text-muted-foreground">
                   {hostnameOf(b.url)}
                 </div>
-              </a>
+              </div>
               <ExternalLink className="absolute right-2 top-2 h-3 w-3 text-muted-foreground opacity-0 transition group-hover:opacity-70" />
               <button
                 type="button"
@@ -1184,13 +1247,13 @@ export default function Dashboard({
           url={ctxMenu.url}
           x={ctxMenu.x}
           y={ctxMenu.y}
+          showEditDelete={!ctxMenu.id.startsWith("topsite:")}
+          onClose={() => setCtxMenu(null)}
           onQr={() => {
             setQrUrl(ctxMenu.url);
-            setCtxMenu(null);
           }}
           onEdit={() => {
             setEditTarget({ id: ctxMenu.id, title: ctxMenu.title, url: ctxMenu.url, parentId: ctxMenu.parentId });
-            setCtxMenu(null);
           }}
           onDelete={async () => {
             try {
@@ -1199,7 +1262,6 @@ export default function Dashboard({
             } catch {
               toast("删除失败", "error");
             }
-            setCtxMenu(null);
           }}
         />
       )}
@@ -1558,6 +1620,8 @@ function BookmarkCtxMenu({
   onQr,
   onEdit,
   onDelete,
+  onClose,
+  showEditDelete = true,
 }: {
   url: string;
   x: number;
@@ -1565,6 +1629,13 @@ function BookmarkCtxMenu({
   onQr: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  /**
+   * 关闭菜单的回调。每一项点击后都先关菜单再执行业务。
+   * 这样无论用户选哪一项，浮层都会立刻消失，避免菜单残留。
+   */
+  onClose: () => void;
+  /** 「编辑 / 删除」是否可用。常用栏的项不是真书签，应隐藏这两项。 */
+  showEditDelete?: boolean;
 }) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
@@ -1578,6 +1649,12 @@ function BookmarkCtxMenu({
     const top = Math.min(y, window.innerHeight - r.height - pad);
     setPos({ left, top });
   }, [x, y]);
+
+  /** 包装：先关菜单再执行业务，保证菜单立刻消失。 */
+  const wrap = (fn: () => unknown) => () => {
+    onClose();
+    Promise.resolve().then(fn);
+  };
 
   const openNewTab = () => window.open(url, "_blank");
   const openNewWindow = () => {
@@ -1600,14 +1677,18 @@ function BookmarkCtxMenu({
       className="fixed z-[60] min-w-[200px] rounded-lg border bg-popover p-1 text-sm shadow-lg"
       style={{ left: pos.left, top: pos.top }}
     >
-      <CtxItem icon={<ExternalLink className="h-4 w-4" />} label="在新标签页打开" onClick={openNewTab} />
-      <CtxItem icon={<AppWindow className="h-4 w-4" />} label="在新窗口打开" onClick={openNewWindow} />
-      <CtxItem icon={<Shield className="h-4 w-4" />} label="在隐身窗口打开" onClick={openIncognito} />
-      <CtxItem icon={<QrCode className="h-4 w-4" />} label="展示二维码" onClick={onQr} />
+      <CtxItem icon={<ExternalLink className="h-4 w-4" />} label="在新标签页打开" onClick={wrap(openNewTab)} />
+      <CtxItem icon={<AppWindow className="h-4 w-4" />} label="在新窗口打开" onClick={wrap(openNewWindow)} />
+      <CtxItem icon={<Shield className="h-4 w-4" />} label="在隐身窗口打开" onClick={wrap(openIncognito)} />
+      <CtxItem icon={<QrCode className="h-4 w-4" />} label="展示二维码" onClick={wrap(onQr)} />
       <div className="my-1 border-t border-border/60" />
-      <CtxItem icon={<Pencil className="h-4 w-4" />} label="编辑" onClick={onEdit} />
-      <CtxItem icon={<Copy className="h-4 w-4" />} label="复制" onClick={copyUrl} />
-      <CtxItem icon={<Trash2 className="h-4 w-4" />} label="删除" onClick={onDelete} className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950" />
+      {showEditDelete && (
+        <CtxItem icon={<Pencil className="h-4 w-4" />} label="编辑" onClick={wrap(onEdit)} />
+      )}
+      <CtxItem icon={<Copy className="h-4 w-4" />} label="复制" onClick={wrap(copyUrl)} />
+      {showEditDelete && (
+        <CtxItem icon={<Trash2 className="h-4 w-4" />} label="删除" onClick={wrap(onDelete)} className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950" />
+      )}
     </div>
   );
 }
@@ -1640,17 +1721,30 @@ function CtxItem({
 function BookmarkMiniCard({
   bookmark,
   onContextMenu,
+  onOpen,
+  onAuxOpen,
 }: {
   bookmark: FlatBookmark;
   onContextMenu?: (e: React.MouseEvent) => void;
+  /** 左键点击：交由父级根据 settings.bookmarkOpenMode 决定。 */
+  onOpen: (e: React.MouseEvent) => void;
+  /** 中键点击：始终新标签页。 */
+  onAuxOpen: (e: React.MouseEvent) => void;
 }) {
   return (
-    <a
-      href={bookmark.url}
-      target="_blank"
-      rel="noreferrer"
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={onOpen}
+      onAuxClick={onAuxOpen}
+      onMouseDown={(e) => {
+        if (e.button === 1) e.preventDefault();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen(e as unknown as React.MouseEvent);
+      }}
       onContextMenu={onContextMenu}
-      className="group flex min-w-0 flex-col gap-1.5 rounded-xl border border-border/50 bg-background/70 p-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background hover:shadow-[0_8px_20px_-14px_hsl(var(--primary)/0.3)]"
+      className="group flex min-w-0 cursor-pointer flex-col gap-1.5 rounded-xl border border-border/50 bg-background/70 p-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background hover:shadow-[0_8px_20px_-14px_hsl(var(--primary)/0.3)]"
       title={bookmark.url}
     >
       <div className="flex min-w-0 items-center gap-2">
@@ -1669,7 +1763,7 @@ function BookmarkMiniCard({
       <div className="text-meta w-full truncate text-center text-muted-foreground">
         {hostnameOf(bookmark.url)}
       </div>
-    </a>
+    </div>
   );
 }
 

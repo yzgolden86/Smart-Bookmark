@@ -30,6 +30,12 @@ export const BUILTIN_ENGINES: EngineDef[] = [
     iframe: true,
   },
   {
+    id: "yandex",
+    name: "Yandex",
+    url: (q) => `https://yandex.com/search/?text=${encodeURIComponent(q)}`,
+    host: "yandex.com",
+  },
+  {
     id: "baidu",
     name: "百度",
     url: (q) => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,

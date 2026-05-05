@@ -24,6 +24,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { toast } from "@/components/ui/toast";
 import LineChart from "@/components/LineChart";
 
 const KIND_ICON: Record<CleanIssue["kind"], React.ComponentType<any>> = {
@@ -82,10 +83,13 @@ export default function Cleaner() {
     setPhase("");
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    const startedAt = performance.now();
     try {
       const found = await scanAll({
         checkInvalid,
-        concurrency: 8,
+        // 16 路并发 + 4.5s 超时；普通宽带下可同时 ping 几十条 url 而不卡 UI。
+        concurrency: 16,
+        timeoutMs: 4500,
         signal: ctrl.signal,
         onProgress: (p) => {
           setProgress({ checked: p.checked, total: p.total });
@@ -93,8 +97,14 @@ export default function Cleaner() {
         },
       });
       setIssues(found);
-      setSelected(new Set(found.map((i) => i.id)));
+      // 用户要求：扫完不再默认全选，让用户自己挑要清理的项。
+      setSelected(new Set());
       setProfile(await buildProfile());
+      const ms = Math.round(performance.now() - startedAt);
+      toast(
+        `扫描完成：发现 ${found.length} 项，用时 ${(ms / 1000).toFixed(1)}s`,
+        found.length ? "success" : "info",
+      );
     } finally {
       setScanning(false);
       abortRef.current = null;
