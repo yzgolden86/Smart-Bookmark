@@ -233,7 +233,7 @@ function AddBookmarkDialog({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="m-2 flex w-full flex-col overflow-hidden rounded-xl border bg-popover shadow-2xl"
+        className="m-2 flex w-full flex-col overflow-hidden rounded-xl bg-popover shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b px-3 py-2">

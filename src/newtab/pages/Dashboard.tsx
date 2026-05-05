@@ -794,9 +794,21 @@ export default function Dashboard({
                             src={faviconOf(b.url, 16)}
                             alt=""
                             className="h-4 w-4 rounded"
-                            onError={(e) =>
-                              (e.currentTarget.style.visibility = "hidden")
-                            }
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              const u = new URL(b.url);
+                              const fallbacks = [
+                                `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=16`,
+                                `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+                              ];
+                              const attempt = parseInt(img.dataset.attempt || "0");
+                              if (attempt < fallbacks.length) {
+                                img.dataset.attempt = String(attempt + 1);
+                                img.src = fallbacks[attempt];
+                              } else {
+                                img.style.visibility = "hidden";
+                              }
+                            }}
                           />
                           <span className="flex-1 truncate">{b.title}</span>
                           <span className="truncate text-xs text-muted-foreground">
@@ -845,9 +857,21 @@ export default function Dashboard({
                             src={faviconOf(h.url, 16)}
                             alt=""
                             className="h-4 w-4 rounded"
-                            onError={(e) =>
-                              (e.currentTarget.style.visibility = "hidden")
-                            }
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              const u = new URL(h.url);
+                              const fallbacks = [
+                                `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=16`,
+                                `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+                              ];
+                              const attempt = parseInt(img.dataset.attempt || "0");
+                              if (attempt < fallbacks.length) {
+                                img.dataset.attempt = String(attempt + 1);
+                                img.src = fallbacks[attempt];
+                              } else {
+                                img.style.visibility = "hidden";
+                              }
+                            }}
                           />
                           <span className="flex-1 truncate">{h.title}</span>
                           <span className="truncate text-xs text-muted-foreground">
@@ -939,9 +963,21 @@ export default function Dashboard({
                       src={faviconOf(s.url, 32)}
                       alt=""
                       className="h-5 w-5"
-                      onError={(e) =>
-                        (e.currentTarget.style.visibility = "hidden")
-                      }
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        const u = new URL(s.url);
+                        const fallbacks = [
+                          `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=32`,
+                          `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+                        ];
+                        const attempt = parseInt(img.dataset.attempt || "0");
+                        if (attempt < fallbacks.length) {
+                          img.dataset.attempt = String(attempt + 1);
+                          img.src = fallbacks[attempt];
+                        } else {
+                          img.style.visibility = "hidden";
+                        }
+                      }}
                     />
                   </div>
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground/90 transition group-hover:text-foreground">
@@ -1154,9 +1190,21 @@ export default function Dashboard({
                       src={faviconOf(b.url)}
                       alt=""
                       className="h-5 w-5"
-                      onError={(e) =>
-                        (e.currentTarget.style.visibility = "hidden")
-                      }
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        const u = new URL(b.url);
+                        const fallbacks = [
+                          `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=32`,
+                          `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+                        ];
+                        const attempt = parseInt(img.dataset.attempt || "0");
+                        if (attempt < fallbacks.length) {
+                          img.dataset.attempt = String(attempt + 1);
+                          img.src = fallbacks[attempt];
+                        } else {
+                          img.style.visibility = "hidden";
+                        }
+                      }}
                     />
                   </div>
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
@@ -1753,7 +1801,21 @@ function BookmarkMiniCard({
             src={faviconOf(bookmark.url, 24)}
             alt=""
             className="h-4 w-4"
-            onError={(e) => (e.currentTarget.style.visibility = "hidden")}
+            onError={(e) => {
+              const img = e.currentTarget;
+              const u = new URL(bookmark.url);
+              const fallbacks = [
+                `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=24`,
+                `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+              ];
+              const attempt = parseInt(img.dataset.attempt || "0");
+              if (attempt < fallbacks.length) {
+                img.dataset.attempt = String(attempt + 1);
+                img.src = fallbacks[attempt];
+              } else {
+                img.style.visibility = "hidden";
+              }
+            }}
           />
         </div>
         <div className="min-w-0 flex-1 truncate text-sm font-medium">
