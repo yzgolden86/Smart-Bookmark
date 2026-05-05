@@ -78,8 +78,8 @@ export const BUILTIN_ENGINES: EngineDef[] = [
   {
     id: "grok",
     name: "Grok",
-    url: (q) => `https://x.com/i/grok?q=${encodeURIComponent(q)}`,
-    host: "x.com",
+    url: (q) => `https://grok.com/?q=${encodeURIComponent(q)}`,
+    host: "grok.com",
   },
   {
     id: "youcom",
