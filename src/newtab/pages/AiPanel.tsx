@@ -13,6 +13,7 @@ import {
   Loader2,
   Download,
   Eraser,
+  User,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { fetchTrending, trendingToMarkdown } from "@/lib/github";
@@ -397,59 +398,103 @@ export default function AiPanel({ settings }: { settings: Settings }) {
             return (
               <article
                 key={m.at != null ? `${m.at}-${m.role}-${i}` : i}
-                className="pl-4"
-                style={{
-                  borderLeft: `2px solid ${rail}`,
-                }}
+                className="flex gap-3"
               >
-                <header
-                  className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]"
-                  style={{ color: "hsl(var(--claude-ink-muted))" }}
-                >
-                  <span
-                    className="font-serif text-[13px] font-semibold tracking-tight text-foreground"
-                    style={isUser ? undefined : { color: rail }}
-                  >
-                    {isUser ? t("ai.userLabel") : t("ai.assistantLabel")}
-                  </span>
-                  {m.at != null && (
-                    <time dateTime={new Date(m.at).toISOString()}>
-                      {formatMsgTime(m.at, settings.language)}
-                    </time>
-                  )}
-                  {!isUser && settings.aiProvider !== "none" && (
-                    <span className="rounded-md bg-background/60 px-1.5 py-0 font-mono text-[10px]">
-                      {modelLine}
-                    </span>
-                  )}
-                </header>
+                {/* 圆形头像徽章：用户用 primary 色 + User 图标，AI 用 claude-accent + Sparkles。 */}
                 <div
-                  className={cn(
-                    "whitespace-pre-wrap text-[14px] leading-[1.7] text-foreground/90",
-                  )}
+                  className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-2"
+                  style={{
+                    background: isUser
+                      ? "linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.06))"
+                      : "linear-gradient(135deg, hsl(var(--claude-accent) / 0.22), hsl(var(--claude-accent) / 0.06))",
+                    color: rail,
+                    // @ts-ignore
+                    "--tw-ring-color": isUser
+                      ? "hsl(var(--primary) / 0.25)"
+                      : "hsl(var(--claude-accent) / 0.25)",
+                  }}
                 >
-                  {m.content}
-                  {/* 还没有内容、且当前在 loading：显式提示「AI 正在思考…」 + 动效，比单个省略号更明显 */}
-                  {!m.content && isLastAssistant && (
+                  {isUser ? (
+                    <User className="h-4 w-4" strokeWidth={1.8} />
+                  ) : (
+                    <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <header
+                    className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]"
+                    style={{ color: "hsl(var(--claude-ink-muted))" }}
+                  >
+                    {/*
+                     * 「用户 / AI助手」字样换成更精致的排版：
+                     * - 字号略大 (14px)、字间距 0.4px、深一档颜色让它从时间戳里突出；
+                     * - 用户名用渐变填充字，AI 助手保持品牌色。
+                     */}
                     <span
-                      className="inline-flex items-center gap-2 rounded-full bg-background/70 px-2.5 py-1 text-[12px]"
-                      style={{ color: "hsl(var(--claude-ink-muted))" }}
+                      className="text-[14px] font-semibold tracking-[0.4px]"
+                      style={
+                        isUser
+                          ? {
+                              backgroundImage:
+                                "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))",
+                              WebkitBackgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                              backgroundClip: "text",
+                              color: "transparent",
+                            }
+                          : { color: rail }
+                      }
                     >
-                      <Loader2
-                        className="h-3.5 w-3.5 animate-spin"
-                        style={{ color: "hsl(var(--claude-accent))" }}
-                      />
-                      {t("ai.thinking")}
+                      {isUser ? t("ai.userLabel") : t("ai.assistantLabel")}
                     </span>
-                  )}
-                  {/* 已经在流式输出过程中：在文本末尾追加一个跳动的小光标 */}
-                  {m.content && isLastAssistant && (
-                    <span
-                      className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse align-middle"
-                      style={{ backgroundColor: "hsl(var(--claude-accent))" }}
-                      aria-hidden
-                    />
-                  )}
+                    {m.at != null && (
+                      <time
+                        dateTime={new Date(m.at).toISOString()}
+                        className="font-mono"
+                      >
+                        {formatMsgTime(m.at, settings.language)}
+                      </time>
+                    )}
+                    {!isUser && settings.aiProvider !== "none" && (
+                      <span className="rounded-md bg-background/60 px-1.5 py-0 font-mono text-[10px]">
+                        {modelLine}
+                      </span>
+                    )}
+                  </header>
+                  <div
+                    className={cn(
+                      "rounded-2xl px-4 py-3 whitespace-pre-wrap text-[14px] leading-[1.7] text-foreground/90 shadow-sm",
+                    )}
+                    style={{
+                      backgroundColor: isUser
+                        ? "hsl(var(--primary) / 0.08)"
+                        : "hsl(0 0% 100% / 0.55)",
+                      borderLeft: `3px solid ${rail}`,
+                    }}
+                  >
+                    {m.content}
+                    {/* 还没有内容、且当前在 loading：显式提示「AI 正在思考…」 + 动效，比单个省略号更明显 */}
+                    {!m.content && isLastAssistant && (
+                      <span
+                        className="inline-flex items-center gap-2 rounded-full bg-background/70 px-2.5 py-1 text-[12px]"
+                        style={{ color: "hsl(var(--claude-ink-muted))" }}
+                      >
+                        <Loader2
+                          className="h-3.5 w-3.5 animate-spin"
+                          style={{ color: "hsl(var(--claude-accent))" }}
+                        />
+                        {t("ai.thinking")}
+                      </span>
+                    )}
+                    {/* 已经在流式输出过程中：在文本末尾追加一个跳动的小光标 */}
+                    {m.content && isLastAssistant && (
+                      <span
+                        className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse align-middle"
+                        style={{ backgroundColor: "hsl(var(--claude-accent))" }}
+                        aria-hidden
+                      />
+                    )}
+                  </div>
                 </div>
               </article>
             );

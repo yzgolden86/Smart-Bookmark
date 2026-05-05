@@ -1,4 +1,4 @@
-import type { BookmarkNode } from "@/types";
+import type { BookmarkNode, Settings } from "@/types";
 import { flatten, getTree } from "@/lib/bookmarks";
 
 export interface BackupNode {
@@ -14,6 +14,27 @@ export interface BackupFile {
   version: 1;
   exportedAt: number;
   tree: BackupNode[];
+  /**
+   * 可选：扩展自身的设置快照。
+   * 默认导出时只保留非敏感字段；用户在 UI 勾选「包含敏感字段」后才会带上
+   * API Key / WebDAV 密码 / Base URL / 用户名等。
+   */
+  settings?: Partial<Settings>;
+}
+
+/** 哪些字段被视为敏感字段，需要用户显式同意才能写入备份。 */
+export const SENSITIVE_SETTINGS_KEYS = [
+  "aiApiKey",
+  "aiBaseUrl",
+  "githubToken",
+  "webdav",
+] as const;
+
+export interface BuildBackupOptions {
+  /** 是否把扩展设置一并备份；默认 false（仅备份书签）。 */
+  includeSettings?: boolean;
+  /** 是否在 settings 里包含敏感字段；只有在 includeSettings 时才生效。 */
+  includeSensitive?: boolean;
 }
 
 function toBackupNode(n: BookmarkNode): BackupNode {
@@ -26,15 +47,37 @@ function toBackupNode(n: BookmarkNode): BackupNode {
   };
 }
 
-export async function buildBackup(): Promise<BackupFile> {
+/**
+ * 删除 settings 里所有「敏感」字段，得到一份脱敏副本。
+ * 注意：webdav 是一个对象——脱敏时把 username/password 也清掉，
+ * 留下 url 和 folder 也算作敏感（可能暴露用户私服地址），所以整个对象一并删除。
+ */
+function stripSensitive(settings: Settings): Partial<Settings> {
+  const copy: Partial<Settings> = { ...settings };
+  for (const k of SENSITIVE_SETTINGS_KEYS) {
+    delete (copy as any)[k];
+  }
+  return copy;
+}
+
+export async function buildBackup(
+  options: BuildBackupOptions = {},
+): Promise<BackupFile> {
   const tree = await getTree();
   const topLevel = tree[0]?.children ?? tree;
-  return {
+  const file: BackupFile = {
     app: "smart-bookmark",
     version: 1,
     exportedAt: Date.now(),
     tree: topLevel.map(toBackupNode),
   };
+  if (options.includeSettings) {
+    // 这里动态 import 避免 backup.ts 与 storage.ts 之间出现循环依赖。
+    const { getSettings } = await import("@/lib/storage");
+    const s = await getSettings();
+    file.settings = options.includeSensitive ? s : stripSensitive(s);
+  }
+  return file;
 }
 
 export function downloadJsonBackup(backup: BackupFile) {

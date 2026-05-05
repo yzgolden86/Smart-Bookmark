@@ -139,7 +139,7 @@ const zh: Dict = {
   "cleaner.confirmClean": (n: string) => `确定要清理 ${n} 条吗？此操作不可撤销。`,
 
   "ai.title": "书签助手",
-  "ai.userLabel": "你",
+  "ai.userLabel": "用户",
   "ai.assistantLabel": "AI助手",
   "ai.disabled": "未启用",
   "ai.emptyHeading": "你的书签智能助手",
@@ -262,6 +262,7 @@ const zh: Dict = {
   "side.empty": "没有匹配的书签",
 
   "popup.dashboard": "打开书签",
+  "popup.addBookmark": "添加书签",
   "popup.cleaner": "书签清理中心",
   "popup.ai": "AI 助手",
   "popup.sidepanel": "打开侧边栏",
@@ -409,7 +410,7 @@ const en: Dict = {
     `Are you sure to remove ${n} bookmarks? This cannot be undone.`,
 
   "ai.title": "Bookmark Assistant",
-  "ai.userLabel": "You",
+  "ai.userLabel": "User",
   "ai.assistantLabel": "AI Assistant",
   "ai.disabled": "Disabled",
   "ai.emptyHeading": "Your bookmark-aware assistant",
@@ -533,6 +534,7 @@ const en: Dict = {
   "side.empty": "No matching bookmarks",
 
   "popup.dashboard": "Open bookmarks",
+  "popup.addBookmark": "Add bookmark",
   "popup.cleaner": "Bookmark cleaner",
   "popup.ai": "AI assistant",
   "popup.sidepanel": "Open side panel",
