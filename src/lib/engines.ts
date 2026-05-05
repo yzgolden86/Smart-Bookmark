@@ -70,22 +70,34 @@ export const BUILTIN_ENGINES: EngineDef[] = [
     iframe: true,
   },
   {
-    id: "kimi",
-    name: "Kimi",
-    url: (q) => `https://kimi.moonshot.cn/?q=${encodeURIComponent(q)}`,
-    host: "kimi.moonshot.cn",
-  },
-  {
-    id: "doubao",
-    name: "豆包",
-    url: (q) => `https://www.doubao.com/chat/?q=${encodeURIComponent(q)}`,
-    host: "doubao.com",
-  },
-  {
     id: "chatgpt",
     name: "ChatGPT",
-    url: (q) => `https://chatgpt.com/?q=${encodeURIComponent(q)}`,
+    url: (q) => `https://chatgpt.com/?q=${encodeURIComponent(q)}&hints=search&ref=ext`,
     host: "chatgpt.com",
+  },
+  {
+    id: "grok",
+    name: "Grok",
+    url: (q) => `https://x.com/i/grok?q=${encodeURIComponent(q)}`,
+    host: "x.com",
+  },
+  {
+    id: "youcom",
+    name: "You.com",
+    url: (q) => `https://you.com/search?q=${encodeURIComponent(q)}`,
+    host: "you.com",
+  },
+  {
+    id: "phind",
+    name: "Phind",
+    url: (q) => `https://www.phind.com/search?q=${encodeURIComponent(q)}`,
+    host: "phind.com",
+  },
+  {
+    id: "consensus",
+    name: "Consensus",
+    url: (q) => `https://consensus.app/search/?q=${encodeURIComponent(q)}`,
+    host: "consensus.app",
   },
   {
     id: "felo",
