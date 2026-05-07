@@ -128,6 +128,20 @@ export interface Settings {
     /** 备份文件存放目录（默认 /smart-bookmark/） */
     folder?: string;
   };
+  /** 发现页快捷书签 */
+  quickLinks?: Array<{
+    id: string;
+    title: string;
+    url: string;
+  }>;
+  /** 发现页信息差工具链接 */
+  toolLinks?: Array<{
+    id: string;
+    title: string;
+    url: string;
+    tag: string;
+    description: string;
+  }>;
 }
 
 export type TrendingRange = "daily" | "weekly" | "monthly" | "yearly";

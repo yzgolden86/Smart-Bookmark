@@ -70,6 +70,8 @@ export interface TrendingPanelProps {
   headerExtra?: React.ReactNode;
   /** 根容器额外 className */
   className?: string;
+  /** 最大高度（CSS 值，如 "500px"），超出后内部滚动 */
+  maxHeight?: string;
 }
 
 export default function TrendingPanel({
@@ -86,6 +88,7 @@ export default function TrendingPanel({
   hideControls = false,
   headerExtra,
   className,
+  maxHeight,
 }: TrendingPanelProps) {
   const t = useT();
   const [rangeState, setRangeState] = useState<TrendingRange>(
@@ -170,7 +173,7 @@ export default function TrendingPanel({
 
   const gridCls = compact
     ? "grid-cols-1 sm:grid-cols-2"
-    : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+    : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5";
 
   // recent-growth 排序下，如果列表里没任何项拿到 recentVelocity（首次刷新/刚清空快照），
   // 提示用户“这个排序需要再刷一次”。
@@ -347,7 +350,13 @@ export default function TrendingPanel({
       )}
 
       {list.length > 0 && (
-        <div className="relative">
+        <div
+          className={cn(
+            "relative rounded-xl border bg-card/30 p-3",
+            maxHeight && "overflow-auto scrollbar-thin"
+          )}
+          style={maxHeight ? { maxHeight } : undefined}
+        >
           <div
             className={cn(
               "grid gap-3 transition-opacity duration-200",

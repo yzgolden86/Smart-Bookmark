@@ -29,6 +29,7 @@ const zh: Dict = {
   "common.save": "保存",
   "common.delete": "删除",
   "common.edit": "编辑",
+  "common.add": "添加",
   "common.reset": "重置",
   "common.all": "全部",
   "common.loading": "加载中…",
@@ -105,6 +106,12 @@ const zh: Dict = {
   "discover.sort.total-stars.hint": "按总 star 数降序。最直观的「现在最热」。",
   "discover.sort.recentMissing":
     "本地还没有该排序所需的快照，刷新一次后下次再来此排序就生效了。",
+  "discover.quickLinks": "快捷书签",
+  "discover.quickLinkTitle": "名称",
+  "discover.toolLinks": "信息差工具",
+  "discover.toolLinkTag": "标签",
+  "discover.toolLinkDescription": "描述",
+  "discover.confirmDelete": "确定删除此项？",
   "settings.discover": "发现 / GitHub 热门",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
@@ -295,6 +302,7 @@ const en: Dict = {
   "common.save": "Save",
   "common.delete": "Delete",
   "common.edit": "Edit",
+  "common.add": "Add",
   "common.reset": "Reset",
   "common.all": "All",
   "common.loading": "Loading…",
@@ -375,6 +383,12 @@ const en: Dict = {
     "Sort by total star count desc — the simplest \"hot right now\".",
   "discover.sort.recentMissing":
     "No snapshots locally yet — refresh once and this sort will activate next time.",
+  "discover.quickLinks": "Quick Links",
+  "discover.quickLinkTitle": "Title",
+  "discover.toolLinks": "Resource Tools",
+  "discover.toolLinkTag": "Tag",
+  "discover.toolLinkDescription": "Description",
+  "discover.confirmDelete": "Delete this item?",
   "settings.discover": "Discover / GitHub Trending",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":

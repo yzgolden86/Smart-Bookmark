@@ -83,16 +83,26 @@ export default function LineChart({
         strokeLinecap="round"
       />
       {coords.map((c) => (
-        <circle
-          key={`d-${c.label}`}
-          cx={c.x}
-          cy={c.y}
-          r={3}
-          className="fill-background stroke-primary"
-          strokeWidth={2}
-        >
-          <title>{`${c.label}: ${c.count}`}</title>
-        </circle>
+        <g key={`d-${c.label}`}>
+          {/* 透明的大圆形作为 hover 区域 */}
+          <circle
+            cx={c.x}
+            cy={c.y}
+            r={8}
+            fill="transparent"
+            className="cursor-pointer"
+          >
+            <title>{`${c.label}: ${c.count}`}</title>
+          </circle>
+          {/* 可见的小圆点 */}
+          <circle
+            cx={c.x}
+            cy={c.y}
+            r={3}
+            className="fill-background stroke-primary pointer-events-none"
+            strokeWidth={2}
+          />
+        </g>
       ))}
       <text
         x={padding.left - 6}
