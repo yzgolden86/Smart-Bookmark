@@ -106,9 +106,9 @@ const zh: Dict = {
   "discover.sort.total-stars.hint": "按总 star 数降序。最直观的「现在最热」。",
   "discover.sort.recentMissing":
     "本地还没有该排序所需的快照，刷新一次后下次再来此排序就生效了。",
-  "discover.quickLinks": "快捷书签",
+  "discover.quickLinks": "快捷访问",
   "discover.quickLinkTitle": "名称",
-  "discover.toolLinks": "信息差工具",
+  "discover.toolLinks": "信息工具",
   "discover.toolLinkTag": "标签",
   "discover.toolLinkDescription": "描述",
   "discover.confirmDelete": "确定删除此项？",
@@ -383,9 +383,9 @@ const en: Dict = {
     "Sort by total star count desc — the simplest \"hot right now\".",
   "discover.sort.recentMissing":
     "No snapshots locally yet — refresh once and this sort will activate next time.",
-  "discover.quickLinks": "Quick Links",
+  "discover.quickLinks": "Quick Access",
   "discover.quickLinkTitle": "Title",
-  "discover.toolLinks": "Resource Tools",
+  "discover.toolLinks": "Info Tools",
   "discover.toolLinkTag": "Tag",
   "discover.toolLinkDescription": "Description",
   "discover.confirmDelete": "Delete this item?",

@@ -77,13 +77,13 @@ export default function QuickLinks({
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         {links.map((link) => (
           <div
             key={link.id}
             className={cn(
-              "group relative flex items-center gap-2 rounded-xl border bg-card px-3 py-2 shadow-sm transition",
-              editing && "pr-16"
+              "group relative flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition hover:shadow-md",
+              editing && "pr-20"
             )}
           >
             {editingId === link.id ? (
@@ -128,14 +128,14 @@ export default function QuickLinks({
                   href={link.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-3"
                   onClick={(e) => editing && e.preventDefault()}
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-background to-muted/40 ring-1 ring-border/60">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-background to-muted/40 ring-1 ring-border/60">
                     <img
                       src={faviconOf(link.url, 32)}
                       alt=""
-                      className="h-4 w-4 rounded"
+                      className="h-5 w-5 rounded"
                       onError={(e) => {
                         const img = e.currentTarget;
                         const u = new URL(link.url);
@@ -224,9 +224,9 @@ export default function QuickLinks({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex h-[52px] w-[52px] items-center justify-center rounded-xl border border-dashed border-muted-foreground/30 text-muted-foreground transition hover:border-primary hover:bg-primary/5 hover:text-primary"
+            className="flex h-[62px] w-[62px] items-center justify-center rounded-xl border border-dashed border-muted-foreground/30 text-muted-foreground transition hover:border-primary hover:bg-primary/5 hover:text-primary"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-6 w-6" />
           </button>
         )}
       </div>
