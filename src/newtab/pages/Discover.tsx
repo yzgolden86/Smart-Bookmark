@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import TrendingPanel from "@/components/TrendingPanel";
 import QuickLinks from "@/components/QuickLinks";
 import NewsNowFrame from "@/components/NewsNowFrame";
@@ -26,16 +26,18 @@ export default function Discover({ settings }: Props) {
     <div className="space-y-4">
       {/* 页面标题 */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-md shadow-rose-500/20">
-          <Flame className="h-5 w-5" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-md shadow-blue-500/20">
+          <Newspaper className="h-5 w-5" />
         </div>
         <div>
           <h1 className="text-xl font-semibold tracking-tight">
             {t("discover.title")}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("discover.subtitle")}
-          </p>
+          {t("discover.subtitle") && (
+            <p className="text-sm text-muted-foreground">
+              {t("discover.subtitle")}
+            </p>
+          )}
         </div>
       </div>
 
@@ -57,7 +59,7 @@ export default function Discover({ settings }: Props) {
       {/* GitHub Trending (5列网格 + 限高滚动) */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold tracking-tight">
-          GitHub Trending
+          {t("discover.githubTrending")}
         </h2>
         <TrendingPanel
           settings={settings}

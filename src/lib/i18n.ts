@@ -48,9 +48,8 @@ const zh: Dict = {
     `匹配 ${n} 个书签 · Enter 走搜索引擎`,
   "dash.matchNone": "无书签匹配 · Enter 走搜索引擎",
 
-  "discover.title": "GitHub 热门",
-  "discover.subtitle":
-    "基于 GitHub Search：选择「新创建」或「最热门」模式，再按日 / 周 / 月 / 年 设定时间窗口，按创建以来 star 均速排序。",
+  "discover.title": "资讯与工具",
+  "discover.subtitle": "",
   "discover.mode.created": "新创建",
   "discover.mode.hottest": "最热门",
   "discover.mode.created.hint": "时间窗内新建的仓库，按创建以来 star 均速排序",
@@ -112,6 +111,7 @@ const zh: Dict = {
   "discover.toolLinkTag": "标签",
   "discover.toolLinkDescription": "描述",
   "discover.confirmDelete": "确定删除此项？",
+  "discover.githubTrending": "GitHub 热门",
   "settings.discover": "发现 / GitHub 热门",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
@@ -322,9 +322,8 @@ const en: Dict = {
     `${n} bookmark matches · Enter to search the web`,
   "dash.matchNone": "No bookmark matches · Enter to search the web",
 
-  "discover.title": "GitHub Trending",
-  "discover.subtitle":
-    "Uses GitHub Search: choose \"Newly Created\" or \"Hottest\" mode, pick a time window, then sort by average stars per day since creation.",
+  "discover.title": "News & Tools",
+  "discover.subtitle": "",
   "discover.mode.created": "Newly Created",
   "discover.mode.hottest": "Hottest",
   "discover.mode.created.hint": "Repos created within the time window, sorted by average stars per day since creation",
@@ -389,6 +388,7 @@ const en: Dict = {
   "discover.toolLinkTag": "Tag",
   "discover.toolLinkDescription": "Description",
   "discover.confirmDelete": "Delete this item?",
+  "discover.githubTrending": "GitHub Trending",
   "settings.discover": "Discover / GitHub Trending",
   "settings.githubToken": "GitHub Personal Access Token",
   "settings.githubTokenHint":
