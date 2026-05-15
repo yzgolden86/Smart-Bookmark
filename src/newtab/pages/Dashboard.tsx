@@ -20,7 +20,8 @@ import type { BookmarkNode, FlatBookmark, Settings } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { cn, faviconOf, hostnameOf } from "@/lib/utils";
+import { cn, hostnameOf } from "@/lib/utils";
+import CachedFavicon from "@/components/CachedFavicon";
 import {
   Search,
   ExternalLink,
@@ -790,25 +791,10 @@ export default function Dashboard({
                           rel="noreferrer"
                           className="flex items-center gap-2 border-t bg-white px-4 py-2 text-sm transition hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800"
                         >
-                          <img
-                            src={faviconOf(b.url, 16)}
-                            alt=""
+                          <CachedFavicon
+                            url={b.url}
+                            size={16}
                             className="h-4 w-4 rounded"
-                            onError={(e) => {
-                              const img = e.currentTarget;
-                              const u = new URL(b.url);
-                              const fallbacks = [
-                                `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=16`,
-                                `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-                              ];
-                              const attempt = parseInt(img.dataset.attempt || "0");
-                              if (attempt < fallbacks.length) {
-                                img.dataset.attempt = String(attempt + 1);
-                                img.src = fallbacks[attempt];
-                              } else {
-                                img.style.visibility = "hidden";
-                              }
-                            }}
                           />
                           <span className="flex-1 truncate">{b.title}</span>
                           <span className="truncate text-xs text-muted-foreground">
@@ -853,25 +839,10 @@ export default function Dashboard({
                           rel="noreferrer"
                           className="flex items-center gap-2 border-t bg-white px-4 py-2 text-sm transition hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800"
                         >
-                          <img
-                            src={faviconOf(h.url, 16)}
-                            alt=""
+                          <CachedFavicon
+                            url={h.url}
+                            size={16}
                             className="h-4 w-4 rounded"
-                            onError={(e) => {
-                              const img = e.currentTarget;
-                              const u = new URL(h.url);
-                              const fallbacks = [
-                                `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=16`,
-                                `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-                              ];
-                              const attempt = parseInt(img.dataset.attempt || "0");
-                              if (attempt < fallbacks.length) {
-                                img.dataset.attempt = String(attempt + 1);
-                                img.src = fallbacks[attempt];
-                              } else {
-                                img.style.visibility = "hidden";
-                              }
-                            }}
                           />
                           <span className="flex-1 truncate">{h.title}</span>
                           <span className="truncate text-xs text-muted-foreground">
@@ -959,25 +930,10 @@ export default function Dashboard({
                   title={s.url}
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/80 ring-1 ring-border/60 transition group-hover:ring-primary/30 group-hover:shadow-sm">
-                    <img
-                      src={faviconOf(s.url, 32)}
-                      alt=""
+                    <CachedFavicon
+                      url={s.url}
+                      size={32}
                       className="h-5 w-5"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const u = new URL(s.url);
-                        const fallbacks = [
-                          `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=32`,
-                          `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-                        ];
-                        const attempt = parseInt(img.dataset.attempt || "0");
-                        if (attempt < fallbacks.length) {
-                          img.dataset.attempt = String(attempt + 1);
-                          img.src = fallbacks[attempt];
-                        } else {
-                          img.style.visibility = "hidden";
-                        }
-                      }}
                     />
                   </div>
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground/90 transition group-hover:text-foreground">
@@ -1186,25 +1142,10 @@ export default function Dashboard({
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 ring-1 ring-inset ring-black/5 transition-all duration-200 group-hover:ring-primary/30 group-hover:shadow-sm dark:from-slate-800 dark:to-slate-900 dark:ring-white/5">
-                    <img
-                      src={faviconOf(b.url)}
-                      alt=""
+                    <CachedFavicon
+                      url={b.url}
+                      size={32}
                       className="h-5 w-5"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const u = new URL(b.url);
-                        const fallbacks = [
-                          `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=32`,
-                          `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-                        ];
-                        const attempt = parseInt(img.dataset.attempt || "0");
-                        if (attempt < fallbacks.length) {
-                          img.dataset.attempt = String(attempt + 1);
-                          img.src = fallbacks[attempt];
-                        } else {
-                          img.style.visibility = "hidden";
-                        }
-                      }}
                     />
                   </div>
                   <div className="min-w-0 flex-1 truncate text-sm font-medium">
@@ -1797,25 +1738,10 @@ function BookmarkMiniCard({
     >
       <div className="flex min-w-0 items-center gap-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border/60">
-          <img
-            src={faviconOf(bookmark.url, 24)}
-            alt=""
+          <CachedFavicon
+            url={bookmark.url}
+            size={24}
             className="h-4 w-4"
-            onError={(e) => {
-              const img = e.currentTarget;
-              const u = new URL(bookmark.url);
-              const fallbacks = [
-                `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=24`,
-                `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-              ];
-              const attempt = parseInt(img.dataset.attempt || "0");
-              if (attempt < fallbacks.length) {
-                img.dataset.attempt = String(attempt + 1);
-                img.src = fallbacks[attempt];
-              } else {
-                img.style.visibility = "hidden";
-              }
-            }}
           />
         </div>
         <div className="min-w-0 flex-1 truncate text-sm font-medium">

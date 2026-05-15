@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Check, ExternalLink, Sparkles } from "lucide-react";
-import { cn, faviconOf, hostnameOf } from "@/lib/utils";
+import { cn, hostnameOf } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import CachedFavicon from "@/components/CachedFavicon";
 
 interface ToolLink {
   id: string;
@@ -181,11 +182,10 @@ export default function ToolLinks({
                   className="pointer-events-none absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary opacity-0 transition group-hover/item:opacity-100"
                 />
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-background to-muted/40 ring-1 ring-border/80 transition group-hover/item:ring-primary/30">
-                  <img
-                    src={faviconOf(link.url, 32)}
-                    alt=""
+                  <CachedFavicon
+                    url={link.url}
+                    size={32}
                     className="h-3.5 w-3.5 rounded"
-                    onError={(e) => (e.currentTarget.style.visibility = "hidden")}
                   />
                 </div>
                 <div className="min-w-0">

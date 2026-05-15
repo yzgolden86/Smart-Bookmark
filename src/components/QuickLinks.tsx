@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
-import { cn, faviconOf, hostnameOf } from "@/lib/utils";
+import { cn, hostnameOf } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import CachedFavicon from "@/components/CachedFavicon";
 
 interface QuickLink {
   id: string;
@@ -132,25 +133,10 @@ export default function QuickLinks({
                   onClick={(e) => editing && e.preventDefault()}
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-background to-muted/40 ring-1 ring-border/60">
-                    <img
-                      src={faviconOf(link.url, 32)}
-                      alt=""
+                    <CachedFavicon
+                      url={link.url}
+                      size={32}
                       className="h-5 w-5 rounded"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const u = new URL(link.url);
-                        const fallbacks = [
-                          `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=32`,
-                          `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-                        ];
-                        const attempt = parseInt(img.dataset.attempt || "0");
-                        if (attempt < fallbacks.length) {
-                          img.dataset.attempt = String(attempt + 1);
-                          img.src = fallbacks[attempt];
-                        } else {
-                          img.style.visibility = "hidden";
-                        }
-                      }}
                     />
                   </div>
                   <div className="flex flex-col">
