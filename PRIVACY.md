@@ -1,7 +1,7 @@
 # Smart Bookmark 隐私政策 / Privacy Policy
 
 **生效日期 / Effective Date**: 2025-01-15  
-**版本 / Version**: 0.2.0  
+**版本 / Version**: 0.3.0  
 **开发者 / Developer**: xiaoniuge36  
 **项目主页 / Project**: https://github.com/xiaoniuge36/Smart-Bookmark  
 **联系邮箱 / Contact**: 通过 GitHub Issues 反馈 / Please file an issue on GitHub

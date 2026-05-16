@@ -1,7 +1,7 @@
 {
   "name": "smart-bookmark",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Smart Bookmark - 书签清理 + 新标签页看板 + AI + 对比搜索 + 悬浮球 + 二维码 + 备份，浏览器扩展（Chrome / Edge，MV3）",
   "scripts": {

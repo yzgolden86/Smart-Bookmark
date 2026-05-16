@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Smart Bookmark - 书签清理 + 新标签页",
   "short_name": "SmartBookmark",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "书签清理 + 新标签页看板 + AI 搜索 + 对比搜索 + 悬浮球 + 二维码，二合一浏览器扩展。Chrome / Edge 双平台。",
   "default_locale": "zh_CN",
   "icons": {

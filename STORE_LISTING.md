@@ -12,7 +12,7 @@
 | **Extension name (EN)** | Smart Bookmark - Cleaner & New Tab |
 | **扩展名称（中文）** | Smart Bookmark - 书签清理 + 新标签页 |
 | **Short name** | SmartBookmark |
-| **Version** | 0.2.0 |
+| **Version** | 0.3.0 |
 | **Category / 类别** | Productivity / 生产力工具 |
 | **Language / 语言** | Chinese (Simplified) + English |
 | **Homepage** | https://github.com/xiaoniuge36/Smart-Bookmark |
